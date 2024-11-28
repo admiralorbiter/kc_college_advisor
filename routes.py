@@ -192,7 +192,13 @@ def import_institutions():
                         'COUNTYNM': 'county',
                         'LONGITUD': 'longitude',
                         'LATITUDE': 'latitude',
-                        'OPEFLAG': 'title_iv_eligible'
+                        'OPEFLAG': 'title_iv_eligible',
+                        'ADMINURL': 'admin_url',
+                        'FAIDURL': 'financial_aid_url',
+                        'APPLURL': 'application_url',
+                        'NPRICURL': 'net_price_calculator_url',
+                        'ATHURL': 'right_to_know_url',
+                        'DISAURL': 'disability_services_url'
                     }
                     
                     # Rename columns according to our mapping
@@ -225,7 +231,13 @@ def import_institutions():
                                 county=row['county'],
                                 longitude=float(row['longitude']),
                                 latitude=float(row['latitude']),
-                                title_iv_eligible=row['title_iv_eligible']
+                                title_iv_eligible=row['title_iv_eligible'],
+                                admin_url=row['admin_url'],
+                                financial_aid_url=row['financial_aid_url'],
+                                application_url=row['application_url'],
+                                net_price_calculator_url=row['net_price_calculator_url'],
+                                right_to_know_url=row['right_to_know_url'],
+                                disability_services_url=row['disability_services_url']
                             )
                             db.session.add(institution)
                             success_count += 1

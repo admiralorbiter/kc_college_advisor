@@ -37,9 +37,55 @@
 
         <div class="detail-group">
             <h3>Website</h3>
-            <p><strong>URL:</strong> 
+            <p><strong>Main URL:</strong> 
                 {% if institution.web_url %}
                     <a href="{{ institution.web_url }}" target="_blank">{{ institution.web_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="detail-group">
+            <h3>Important Links</h3>
+            <p><strong>Administration:</strong> 
+                {% if institution.admin_url %}
+                    <a href="{{ institution.admin_url }}" target="_blank">{{ institution.admin_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Financial Aid:</strong> 
+                {% if institution.financial_aid_url %}
+                    <a href="{{ institution.financial_aid_url }}" target="_blank">{{ institution.financial_aid_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Application:</strong> 
+                {% if institution.application_url %}
+                    <a href="{{ institution.application_url }}" target="_blank">{{ institution.application_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Net Price Calculator:</strong> 
+                {% if institution.net_price_calculator_url %}
+                    <a href="{{ institution.net_price_calculator_url }}" target="_blank">{{ institution.net_price_calculator_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Right to Know:</strong> 
+                {% if institution.right_to_know_url %}
+                    <a href="{{ institution.right_to_know_url }}" target="_blank">{{ institution.right_to_know_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+            <p><strong>Disability Services:</strong> 
+                {% if institution.disability_services_url %}
+                    <a href="{{ institution.disability_services_url }}" target="_blank">{{ institution.disability_services_url }}</a>
                 {% else %}
                     N/A
                 {% endif %}
