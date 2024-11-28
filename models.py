@@ -1,5 +1,18 @@
+from enum import IntEnum
 from flask_sqlalchemy import SQLAlchemy
 from app import db
+
+class InstitutionLevel(IntEnum):
+    UNKNOWN = -3
+    FOUR_YEAR = 1
+    TWO_YEAR = 2
+    LESS_THAN_TWO_YEAR = 3
+
+class InstitutionControl(IntEnum):
+    UNKNOWN = -3
+    PUBLIC = 1
+    PRIVATE_NONPROFIT = 2
+    PRIVATE_FORPROFIT = 3
 
 class Institution(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -21,3 +34,5 @@ class Institution(db.Model):
     net_price_calculator_url = db.Column(db.String(100), nullable=True)
     right_to_know_url = db.Column(db.String(100), nullable=True)
     disability_services_url = db.Column(db.String(100), nullable=True)
+    control = db.Column(db.Enum(InstitutionControl), nullable=True)
+    level = db.Column(db.Enum(InstitutionLevel), nullable=True)

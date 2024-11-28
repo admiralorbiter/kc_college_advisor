@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution
+from models import Institution, InstitutionLevel, InstitutionControl
 import pandas as pd
 import csv
 import io
@@ -198,7 +198,9 @@ def import_institutions():
                         'APPLURL': 'application_url',
                         'NPRICURL': 'net_price_calculator_url',
                         'ATHURL': 'right_to_know_url',
-                        'DISAURL': 'disability_services_url'
+                        'DISAURL': 'disability_services_url',
+                        'ICLEVEL': 'level',
+                        'CONTROL': 'control'
                     }
                     
                     # Rename columns according to our mapping
@@ -212,6 +214,24 @@ def import_institutions():
                     
                     # Convert OPEFLAG to boolean based on values
                     df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
+                    
+                    # Convert level and control to appropriate enum values
+                    def map_level(value):
+                        try:
+                            value = int(value)
+                            return InstitutionLevel(value if value in [-3, 1, 2, 3] else -3)
+                        except (ValueError, TypeError):
+                            return InstitutionLevel.UNKNOWN
+
+                    def map_control(value):
+                        try:
+                            value = int(value)
+                            return InstitutionControl(value if value in [-3, 1, 2, 3] else -3)
+                        except (ValueError, TypeError):
+                            return InstitutionControl.UNKNOWN
+
+                    df['level'] = df['level'].apply(map_level)
+                    df['control'] = df['control'].apply(map_control)
                     
                     # Create Institution objects and add to database
                     success_count = 0
@@ -237,12 +257,15 @@ def import_institutions():
                                 application_url=row['application_url'],
                                 net_price_calculator_url=row['net_price_calculator_url'],
                                 right_to_know_url=row['right_to_know_url'],
-                                disability_services_url=row['disability_services_url']
+                                disability_services_url=row['disability_services_url'],
+                                level=row['level'],
+                                control=row['control']
                             )
                             db.session.add(institution)
                             success_count += 1
                         except Exception as e:
                             error_count += 1
+                            print(f"Error processing row: {str(e)}")
                             continue
                     
                     # Commit all successful additions

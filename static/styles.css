@@ -446,3 +446,50 @@ footer {
 .status-icon.unknown {
     color: #6c757d;
 }
+
+/* Institution type badges */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+/* Level badges */
+.badge-four-year {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.badge-two-year {
+    background-color: #2196F3;
+    color: white;
+}
+
+.badge-less-than-two-year {
+    background-color: #FF9800;
+    color: white;
+}
+
+/* Control badges */
+.badge-public {
+    background-color: #9C27B0;
+    color: white;
+}
+
+.badge-private-nonprofit {
+    background-color: #E91E63;
+    color: white;
+}
+
+.badge-private-forprofit {
+    background-color: #F44336;
+    color: white;
+}
+
+.badge-unknown {
+    background-color: #757575;
+    color: white;
+}
