@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Institutions - KC College Explorer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>Import Institutions</h1>
+        {% include 'nav.html' %}
+    </header>
+    
+    <main>
+        <h2>Import Institutions</h2>
+        <div class="import-container">
+            <div class="dropzone" id="dropzone">
+                <div class="dropzone-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag and drop your CSV file here</p>
+                    <p>or</p>
+                    <label for="fileInput" class="btn">Choose File</label>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                </div>
+            </div>
+            <div id="file-info" class="file-info" style="display: none;">
+                <p>Selected file: <span id="filename"></span></p>
+                <button class="btn submit-btn" id="upload-btn">Upload</button>
+            </div>
+            <div id="message-container" class="message-container" style="display: none;">
+                <div class="message">
+                    <i class="fas fa-info-circle message-icon"></i>
+                    <span id="message-text"></span>
+                </div>
+                <div class="import-stats">
+                    <p>Successful imports: <span id="success-count">0</span></p>
+                    <p>Failed imports: <span id="error-count">0</span></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2024 KC College Explorer. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('file-info');
+        const filename = document.getElementById('filename');
+        const uploadBtn = document.getElementById('upload-btn');
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            dropzone.classList.add('highlight');
+        }
+
+        function unhighlight(e) {
+            dropzone.classList.remove('highlight');
+        }
+
+        dropzone.addEventListener('drop', handleDrop, false);
+        fileInput.addEventListener('change', handleFileSelect, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type === 'text/csv' || file.name.endsWith('.csv')) {
+                    filename.textContent = file.name;
+                    fileInfo.style.display = 'block';
+                    fileInput.files = files;
+                } else {
+                    alert('Please upload a CSV file');
+                }
+            }
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please select a file first');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            try {
+                const response = await fetch('/institutions/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                
+                const messageContainer = document.getElementById('message-container');
+                const messageText = document.getElementById('message-text');
+                const successCount = document.getElementById('success-count');
+                const errorCount = document.getElementById('error-count');
+                
+                messageContainer.style.display = 'block';
+                
+                if (result.success) {
+                    messageText.textContent = result.message;
+                    const counts = result.message.match(/\d+/g);
+                    if (counts && counts.length >= 1) {
+                        successCount.textContent = counts[0];
+                        if (counts.length >= 2) {
+                            errorCount.textContent = counts[1];
+                        }
+                    }
+                    setTimeout(() => {
+                        window.location.href = '/colleges';
+                    }, 4000);
+                } else {
+                    messageText.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                alert('Error uploading file: ' + error);
+            }
+        });
+    </script>
+</body>
+</html>

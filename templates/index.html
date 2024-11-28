@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Website</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>KC College Explorer</h1>
+        {% include 'nav.html' %}
+    </header>
+    <main>
+        <h2>Main Content</h2>
+        <p>This is a basic template for your website. You can modify it according to your needs.</p>
+    </main>
+    <footer>
+        <p>&copy; 2024 My Website. All rights reserved.</p>
+    </footer>
+</body>
+</html>
