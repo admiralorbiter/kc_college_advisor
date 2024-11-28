@@ -1,9 +1,10 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree
+from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification
 import pandas as pd
 import csv
 import io
+import os
 
 @app.route('/', methods=['GET'])
 def index():
@@ -161,177 +162,272 @@ def import_institutions():
             return jsonify({'success': False, 'error': 'No file selected'})
         
         if file and file.filename.endswith('.csv'):
-            # List of encodings to try
-            encodings = ['UTF-8', 'UTF-8-SIG', 'ISO-8859-1', 'cp1252']
-            
-            for encoding in encodings:
-                try:
-                    # Read the file content
-                    content = file.read()
-                    # Reset file pointer for potential next iteration
-                    file.seek(0)
-                    
-                    # Try to decode with current encoding
-                    decoded_content = content.decode(encoding)
-                    stream = io.StringIO(decoded_content, newline=None)
-                    df = pd.read_csv(stream)
-                    
-                    # If we get here, the encoding worked
-                    print(f"Successfully decoded with {encoding}")
-                    
-                    # Map the columns to our model fields
-                    column_mapping = {
-                        'UNITID': 'institution_id',
-                        'INSTNM': 'name',
-                        'IALIAS': 'alias',
-                        'ADDR': 'address',
-                        'CITY': 'city',
-                        'STABBR': 'state',
-                        'ZIP': 'zip',
-                        'WEBADDR': 'web_url',
-                        'COUNTYNM': 'county',
-                        'LONGITUD': 'longitude',
-                        'LATITUDE': 'latitude',
-                        'OPEFLAG': 'title_iv_eligible',
-                        'ADMINURL': 'admin_url',
-                        'FAIDURL': 'financial_aid_url',
-                        'APPLURL': 'application_url',
-                        'NPRICURL': 'net_price_calculator_url',
-                        'ATHURL': 'right_to_know_url',
-                        'DISAURL': 'disability_services_url',
-                        'ICLEVEL': 'level',
-                        'CONTROL': 'control',
-                        'HLOFFER': 'highest_degree',
-                        'UGOFFER': 'undergraduate_degree_offered',
-                        'GROFFER': 'graduate_degree_offered'
-                    }
-                    
-                    # Rename columns according to our mapping
-                    df = df[column_mapping.keys()]
-                    df = df.rename(columns=column_mapping)
-                    
-                    # Convert empty strings to None for nullable fields
-                    nullable_fields = ['alias', 'address', 'zip', 'web_url']
-                    for field in nullable_fields:
-                        df[field] = df[field].replace('', None)
-                    
-                    # Convert OPEFLAG to boolean based on values
-                    df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
-                    
-                    # Convert level and control to appropriate enum values
-                    def map_level(value):
-                        try:
-                            value = int(value)
-                            return InstitutionLevel(value if value in [-3, 1, 2, 3] else -3)
-                        except (ValueError, TypeError):
-                            return InstitutionLevel.UNKNOWN
-
-                    def map_control(value):
-                        try:
-                            value = int(value)
-                            return InstitutionControl(value if value in [-3, 1, 2, 3] else -3)
-                        except (ValueError, TypeError):
-                            return InstitutionControl.UNKNOWN
-
-                    df['level'] = df['level'].apply(map_level)
-                    df['control'] = df['control'].apply(map_control)
-                    
-                    # After the existing mapping functions for level and control, add:
-                    def map_highest_degree(value):
-                        try:
-                            value = int(value)
-                            # Map according to the HLOFFER encoding
-                            if value in range(0, 10) or value in [-2, -3] or value == 'b':
-                                return HighestDegree(value)
-                            return HighestDegree(-3)  # Default to "Not Available" for invalid values
-                        except (ValueError, TypeError):
-                            return HighestDegree(-3)
-
-                    def map_degree_offered(value):
-                        try:
-                            value = int(value)
-                            if value == 1:
-                                return True
-                            elif value == 2:
-                                return False
-                            else:
-                                return None  # For -3 or any other values, set as unknown
-                        except (ValueError, TypeError):
-                            return None
-
-                    # Add these conversions after the existing level and control mappings:
-                    df['highest_degree'] = df['highest_degree'].apply(map_highest_degree)
-                    df['undergraduate_degree_offered'] = df['undergraduate_degree_offered'].apply(map_degree_offered)
-                    df['graduate_degree_offered'] = df['graduate_degree_offered'].apply(map_degree_offered)
-                    
-                    # Create Institution objects and add to database
-                    success_count = 0
-                    error_count = 0
-                    
-                    for _, row in df.iterrows():
-                        try:
-                            institution = Institution(
-                                institution_id=str(row['institution_id']),
-                                name=row['name'],
-                                alias=row['alias'],
-                                address=row['address'],
-                                city=row['city'],
-                                state=row['state'],
-                                zip=row['zip'],
-                                web_url=row['web_url'],
-                                county=row['county'],
-                                longitude=float(row['longitude']),
-                                latitude=float(row['latitude']),
-                                title_iv_eligible=row['title_iv_eligible'],
-                                admin_url=row['admin_url'],
-                                financial_aid_url=row['financial_aid_url'],
-                                application_url=row['application_url'],
-                                net_price_calculator_url=row['net_price_calculator_url'],
-                                right_to_know_url=row['right_to_know_url'],
-                                disability_services_url=row['disability_services_url'],
-                                level=row['level'],
-                                control=row['control'],
-                                highest_degree=row['highest_degree'],
-                                undergraduate_degree_offered=row['undergraduate_degree_offered'],
-                                graduate_degree_offered=row['graduate_degree_offered']
-                            )
-                            db.session.add(institution)
-                            success_count += 1
-                        except Exception as e:
-                            error_count += 1
-                            print(f"Error processing row: {str(e)}")
-                            continue
-                    
-                    # Commit all successful additions
-                    db.session.commit()
-                    
-                    message = f'Successfully imported {success_count} institutions.'
-                    if error_count > 0:
-                        message += f' {error_count} records had errors and were skipped.'
-                    
-                    return jsonify({
-                        'success': True,
-                        'message': message
-                    })
-                    
-                except UnicodeDecodeError:
-                    # If this encoding didn't work, try the next one
-                    continue
-                except Exception as e:
-                    # Handle other errors
-                    db.session.rollback()
-                    return jsonify({
-                        'success': False,
-                        'error': f'Error processing file with {encoding}: {str(e)}'
-                    })
+            try:
+                # Save the uploaded file temporarily
+                temp_path = 'temp_upload.csv'
+                file.save(temp_path)
                 
-                # If we successfully processed the file, break the loop
-                break
-            else:
-                # If we've tried all encodings and none worked
+                # Read the CSV file directly with pandas
+                df = pd.read_csv(temp_path, encoding_errors='replace')
+                
+                # Delete the temporary file
+                os.remove(temp_path)
+                
+                # Map the columns to our model fields
+                column_mapping = {
+                    'UNITID': 'institution_id',
+                    'INSTNM': 'name',
+                    'IALIAS': 'alias',
+                    'ADDR': 'address',
+                    'CITY': 'city',
+                    'STABBR': 'state',
+                    'ZIP': 'zip',
+                    'WEBADDR': 'web_url',
+                    'COUNTYNM': 'county',
+                    'LONGITUD': 'longitude',
+                    'LATITUDE': 'latitude',
+                    'OPEFLAG': 'title_iv_eligible',
+                    'ADMINURL': 'admin_url',
+                    'FAIDURL': 'financial_aid_url',
+                    'APPLURL': 'application_url',
+                    'NPRICURL': 'net_price_calculator_url',
+                    'ATHURL': 'right_to_know_url',
+                    'DISAURL': 'disability_services_url',
+                    'ICLEVEL': 'level',
+                    'CONTROL': 'control',
+                    'HLOFFER': 'highest_degree',
+                    'UGOFFER': 'undergraduate_degree_offered',
+                    'GROFFER': 'graduate_degree_offered',
+                    'HBCU': 'hbcu',
+                    'MEDICAL': 'medical_school',
+                    'LOCALE': 'locale',
+                    'OPENPUBL': 'open_to_public',
+                    'ACT': 'status',
+                    'PSET4FLG': 'pset4_flag',
+                    'INSTCAT': 'institution_category',
+                    'INSTSIZE': 'size_classification',
+                    'C21BASIC': 'carnegie_classification'
+                }
+                
+                # Rename columns according to our mapping
+                df = df[column_mapping.keys()]
+                df = df.rename(columns=column_mapping)
+                
+                # Convert empty strings to None for nullable fields
+                nullable_fields = ['alias', 'address', 'zip', 'web_url']
+                for field in nullable_fields:
+                    df[field] = df[field].replace('', None)
+                
+                # Convert OPEFLAG to boolean based on values
+                df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
+                
+                # Convert level and control to appropriate enum values
+                def map_level(value):
+                    try:
+                        if pd.isna(value):
+                            return None
+                        value = int(value)
+                        return InstitutionLevel(value if value in [-3, 1, 2, 3] else -3)
+                    except (ValueError, TypeError):
+                        return InstitutionLevel.UNKNOWN
+
+                def map_control(value):
+                    try:
+                        if pd.isna(value):
+                            return None
+                        value = int(value)
+                        return InstitutionControl(value if value in [-3, 1, 2, 3] else -3)
+                    except (ValueError, TypeError):
+                        return InstitutionControl.UNKNOWN
+
+                df['level'] = df['level'].apply(map_level)
+                df['control'] = df['control'].apply(map_control)
+                
+                # After the existing mapping functions for level and control, add:
+                def map_highest_degree(value):
+                    try:
+                        if pd.isna(value):
+                            return None
+                        value = int(value)
+                        if value in range(0, 10) or value in [-2, -3] or value == 'b':
+                            return HighestDegree(value)
+                        return HighestDegree(-3)
+                    except (ValueError, TypeError):
+                        return HighestDegree(-3)
+
+                def map_degree_offered(value):
+                    try:
+                        value = int(value)
+                        if value == 1:
+                            return True
+                        elif value == 2:
+                            return False
+                        else:
+                            return None  # For -3 or any other values, set as unknown
+                    except (ValueError, TypeError):
+                        return None
+
+                # Add these conversions after the existing level and control mappings:
+                df['highest_degree'] = df['highest_degree'].apply(map_highest_degree)
+                df['undergraduate_degree_offered'] = df['undergraduate_degree_offered'].apply(map_degree_offered)
+                df['graduate_degree_offered'] = df['graduate_degree_offered'].apply(map_degree_offered)
+                
+                # Convert boolean fields (1=True, 2=False, -3=None)
+                def map_boolean(value):
+                    try:
+                        value = int(value)
+                        if value == 1:
+                            return True
+                        elif value == 2:
+                            return False
+                        else:
+                            return None
+                    except (ValueError, TypeError):
+                        return None
+
+                # Add boolean field mappings
+                boolean_fields = ['hbcu', 'medical_school', 'open_to_public']
+                for field in boolean_fields:
+                    df[field] = df[field].apply(map_boolean)
+
+                # Map enum fields
+                def map_locale(value):
+                    try:
+                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+                            return InstitutionLocale.UNKNOWN
+                        value = int(float(value))
+                        valid_values = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43]
+                        return InstitutionLocale(value) if value in valid_values else InstitutionLocale.UNKNOWN
+                    except (ValueError, TypeError):
+                        return InstitutionLocale.UNKNOWN
+
+                def map_status(value):
+                    try:
+                        if pd.isna(value) or value == '' or value == ' ':
+                            return None  # Using None since it's nullable
+                        return InstitutionStatus(value) if value in ['A', 'N', 'M', 'R'] else None
+                    except (ValueError, TypeError):
+                        return None
+
+                def map_pset4flag(value):
+                    try:
+                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+                            return Pset4Flag.UNKNOWN
+                        value = int(float(value))
+                        return Pset4Flag(value) if value in [0, 1, 2, 3, 4, 5, 9] else Pset4Flag.UNKNOWN
+                    except (ValueError, TypeError):
+                        return Pset4Flag.UNKNOWN
+
+                def map_institution_category(value):
+                    try:
+                        if pd.isna(value) or value == '':
+                            return None
+                        value = int(float(value))  # Convert to float first in case it's a decimal
+                        if value in range(1, 7):  # Valid values are 1-6
+                            return InstitutionCategory(value)
+                        return None
+                    except (ValueError, TypeError):
+                        return None
+
+                def map_size_classification(value):
+                    try:
+                        if pd.isna(value) or value == '':
+                            return None
+                        value = int(float(value))
+                        valid_values = [11, 12, 13, 14, 15, 21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 60]
+                        return InstitutionSizeClassification(value) if value in valid_values else None
+                    except (ValueError, TypeError):
+                        return None
+
+                def map_carnegie_classification(value):
+                    try:
+                        if pd.isna(value) or value == '':
+                            return None
+                        value = int(float(value))
+                        return CarnegieClassification(value) if value in range(1, 34) else None
+                    except (ValueError, TypeError):
+                        return None
+
+                # Apply enum mappings
+                df['locale'] = df['locale'].apply(map_locale)
+                df['status'] = df['status'].apply(map_status)
+                df['pset4_flag'] = df['pset4_flag'].apply(map_pset4flag)
+                df['institution_category'] = df['institution_category'].apply(map_institution_category)
+                df['size_classification'] = df['size_classification'].apply(map_size_classification)
+                df['carnegie_classification'] = df['carnegie_classification'].apply(map_carnegie_classification)
+                
+                # Create Institution objects and add to database
+                success_count = 0
+                error_count = 0
+                
+                # General clean_enum_value function for numeric enums
+                def clean_enum_value(value, enum_class):
+                    try:
+                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+                            return enum_class.UNKNOWN
+                        value = int(float(value))
+                        return enum_class(value) if value in [e.value for e in enum_class] else enum_class.UNKNOWN
+                    except (ValueError, TypeError):
+                        return enum_class.UNKNOWN
+
+                try:
+                    for _, row in df.iterrows():
+                        institution = Institution(
+                            institution_id=str(row['institution_id']),
+                            name=row['name'],
+                            alias=row['alias'],
+                            address=row['address'],
+                            city=row['city'],
+                            state=row['state'],
+                            zip=row['zip'],
+                            web_url=row['web_url'],
+                            county=row['county'],
+                            longitude=float(row['longitude']),
+                            latitude=float(row['latitude']),
+                            title_iv_eligible=row['title_iv_eligible'],
+                            admin_url=row['admin_url'],
+                            financial_aid_url=row['financial_aid_url'],
+                            application_url=row['application_url'],
+                            net_price_calculator_url=row['net_price_calculator_url'],
+                            right_to_know_url=row['right_to_know_url'],
+                            disability_services_url=row['disability_services_url'],
+                            level=clean_enum_value(row['level'], InstitutionLevel),
+                            control=clean_enum_value(row['control'], InstitutionControl),
+                            highest_degree=clean_enum_value(row['highest_degree'], HighestDegree),
+                            undergraduate_degree_offered=row['undergraduate_degree_offered'],
+                            graduate_degree_offered=row['graduate_degree_offered'],
+                            hbcu=row['hbcu'],
+                            medical_school=row['medical_school'],
+                            locale=clean_enum_value(row['locale'], InstitutionLocale),
+                            open_to_public=row['open_to_public'],
+                            status=map_status(row['status']),
+                            pset4_flag=clean_enum_value(row['pset4_flag'], Pset4Flag),
+                            institution_category=clean_enum_value(row['institution_category'], InstitutionCategory),
+                            size_classification=clean_enum_value(row['size_classification'], InstitutionSizeClassification),
+                            carnegie_classification=clean_enum_value(row['carnegie_classification'], CarnegieClassification)
+                        )
+                        db.session.add(institution)
+                        success_count += 1
+                except Exception as e:
+                    error_count += 1
+                    print(f"Error processing row: {str(e)}")
+                
+                # Commit all successful additions
+                db.session.commit()
+                
+                message = f'Successfully imported {success_count} institutions.'
+                if error_count > 0:
+                    message += f' {error_count} records had errors and were skipped.'
+                
+                return jsonify({
+                    'success': True,
+                    'message': message
+                })
+                
+            except Exception as e:
                 return jsonify({
                     'success': False,
-                    'error': 'Could not decode file with any supported encoding'
+                    'error': f'Error processing file: {str(e)}'
                 })
     
     # GET request - show the upload form

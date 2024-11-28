@@ -125,6 +125,100 @@
         </div>
 
         <div class="detail-group">
+            <h3>Additional Characteristics</h3>
+            <p>
+                <strong>HBCU Status:</strong>
+                {% if institution.hbcu == True %}
+                    <i class="fas fa-check-circle status-icon success"></i> Yes
+                {% elif institution.hbcu == False %}
+                    <i class="fas fa-times-circle status-icon error"></i> No
+                {% else %}
+                    <i class="fas fa-question-circle status-icon unknown"></i> Unknown
+                {% endif %}
+            </p>
+            
+            <p>
+                <strong>Medical School:</strong>
+                {% if institution.medical_school == True %}
+                    <i class="fas fa-hospital status-icon success"></i> Yes
+                {% elif institution.medical_school == False %}
+                    <i class="fas fa-times-circle status-icon error"></i> No
+                {% else %}
+                    <i class="fas fa-question-circle status-icon unknown"></i> Unknown
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Open to Public:</strong>
+                {% if institution.open_to_public == True %}
+                    <i class="fas fa-door-open status-icon success"></i> Yes
+                {% elif institution.open_to_public == False %}
+                    <i class="fas fa-door-closed status-icon error"></i> No
+                {% else %}
+                    <i class="fas fa-question-circle status-icon unknown"></i> Unknown
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                {% if institution.status %}
+                    {% if institution.status.value == 'A' %}
+                        <span class="badge badge-status-active">Active</span>
+                    {% elif institution.status.value == 'N' %}
+                        <span class="badge badge-status-new">New</span>
+                    {% elif institution.status.value == 'M' %}
+                        <span class="badge badge-status-closed">Closed (with Data)</span>
+                    {% elif institution.status.value == 'R' %}
+                        <span class="badge badge-status-restored">Restored</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge badge-unknown">Unknown Status</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="detail-group">
+            <h3>Classification Details</h3>
+            <p>
+                <strong>Locale:</strong>
+                {% if institution.locale %}
+                    <span class="badge badge-locale">
+                        {% if institution.locale.value in [11, 12, 13] %}
+                            <i class="fas fa-city"></i>
+                        {% elif institution.locale.value in [21, 22, 23] %}
+                            <i class="fas fa-home"></i>
+                        {% elif institution.locale.value in [31, 32, 33] %}
+                            <i class="fas fa-store"></i>
+                        {% elif institution.locale.value in [41, 42, 43] %}
+                            <i class="fas fa-tree"></i>
+                        {% endif %}
+                        {{ institution.locale.name.replace('_', ' ').title() }}
+                    </span>
+                {% else %}
+                    <span class="badge badge-unknown">Unknown</span>
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Size Classification:</strong>
+                {% if institution.size_classification %}
+                    <span class="badge badge-size">{{ institution.size_classification.name.replace('_', ' ').title() }}</span>
+                {% else %}
+                    <span class="badge badge-unknown">Unknown</span>
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Carnegie Classification:</strong>
+                {% if institution.carnegie_classification %}
+                    <span class="badge badge-carnegie">{{ institution.carnegie_classification.name }}</span>
+                {% else %}
+                    <span class="badge badge-unknown">Unknown</span>
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="detail-group">
             <h3>Degree Information</h3>
             <p>
                 <strong>Highest Degree:</strong>

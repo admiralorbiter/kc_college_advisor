@@ -566,3 +566,55 @@ footer {
     margin-right: 8px;
     color: #0d6efd;
 }
+
+/* Additional badge styles */
+.badge-status-active {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-status-new {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.badge-status-closed {
+    background-color: #dc3545;
+    color: white;
+}
+
+.badge-status-restored {
+    background-color: #ffc107;
+    color: black;
+}
+
+.badge-locale {
+    background-color: #6610f2;
+    color: white;
+    padding: 6px 12px;
+}
+
+.badge-locale i {
+    margin-right: 6px;
+}
+
+.badge-size {
+    background-color: #20c997;
+    color: white;
+}
+
+.badge-carnegie {
+    background-color: #6f42c1;
+    color: white;
+}
+
+/* Classification details styling */
+.detail-group i {
+    margin-right: 5px;
+}
+
+.detail-group .badge {
+    margin-left: 8px;
+    padding: 6px 12px;
+    font-size: 0.85em;
+}
