@@ -14,6 +14,20 @@ class InstitutionControl(IntEnum):
     PRIVATE_NONPROFIT = 2
     PRIVATE_FORPROFIT = 3
 
+class HighestDegree(IntEnum):
+    NOT_AVAILABLE = -3
+    NOT_APPLICABLE = -2
+    NONE = 0
+    LESS_THAN_ONE_YEAR = 1
+    ONE_TO_TWO_YEARS = 2
+    ASSOCIATES = 3
+    TWO_TO_FOUR_YEARS = 4
+    BACHELORS = 5
+    POST_BACCALAUREATE = 6
+    MASTERS = 7
+    POST_MASTERS = 8
+    DOCTORATE = 9
+
 class Institution(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     institution_id = db.Column(db.String(100), nullable=False)
@@ -36,3 +50,6 @@ class Institution(db.Model):
     disability_services_url = db.Column(db.String(100), nullable=True)
     control = db.Column(db.Enum(InstitutionControl), nullable=True)
     level = db.Column(db.Enum(InstitutionLevel), nullable=True)
+    highest_degree = db.Column(db.Enum(HighestDegree), nullable=True)
+    undergraduate_degree_offered = db.Column(db.Boolean, nullable=True)
+    graduate_degree_offered = db.Column(db.Boolean, nullable=True)

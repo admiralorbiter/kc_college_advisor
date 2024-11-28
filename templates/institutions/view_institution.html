@@ -124,6 +124,54 @@
             </p>
         </div>
 
+        <div class="detail-group">
+            <h3>Degree Information</h3>
+            <p>
+                <strong>Highest Degree:</strong>
+                {% if institution.highest_degree %}
+                    {% if institution.highest_degree.value == 3 %}
+                        <span class="badge-degree badge-associates">Associate's Degree</span>
+                    {% elif institution.highest_degree.value == 5 %}
+                        <span class="badge-degree badge-bachelors">Bachelor's Degree</span>
+                    {% elif institution.highest_degree.value == 7 %}
+                        <span class="badge-degree badge-masters">Master's Degree</span>
+                    {% elif institution.highest_degree.value == 9 %}
+                        <span class="badge-degree badge-doctoral">Doctoral Degree</span>
+                    {% elif institution.highest_degree.value in [1, 2, 4, 6, 8] %}
+                        <span class="badge-degree badge-certificate">Certificate</span>
+                    {% else %}
+                        <span class="badge-degree badge-unknown">Unknown</span>
+                    {% endif %}
+                {% else %}
+                    <span class="badge-degree badge-unknown">Unknown</span>
+                {% endif %}
+            </p>
+            
+            <p class="degree-offering {% if institution.undergraduate_degree_offered == True %}offered{% elif institution.undergraduate_degree_offered == False %}not-offered{% else %}unknown{% endif %}">
+                <i class="fas {% if institution.undergraduate_degree_offered == True %}fa-check-circle{% elif institution.undergraduate_degree_offered == False %}fa-times-circle{% else %}fa-question-circle{% endif %}"></i>
+                <strong>Undergraduate Programs:</strong>
+                {% if institution.undergraduate_degree_offered == True %}
+                    Offered
+                {% elif institution.undergraduate_degree_offered == False %}
+                    Not Offered
+                {% else %}
+                    Unknown
+                {% endif %}
+            </p>
+
+            <p class="degree-offering {% if institution.graduate_degree_offered == True %}offered{% elif institution.graduate_degree_offered == False %}not-offered{% else %}unknown{% endif %}">
+                <i class="fas {% if institution.graduate_degree_offered == True %}fa-check-circle{% elif institution.graduate_degree_offered == False %}fa-times-circle{% else %}fa-question-circle{% endif %}"></i>
+                <strong>Graduate Programs:</strong>
+                {% if institution.graduate_degree_offered == True %}
+                    Offered
+                {% elif institution.graduate_degree_offered == False %}
+                    Not Offered
+                {% else %}
+                    Unknown
+                {% endif %}
+            </p>
+        </div>
+
         <div class="action-buttons">
             <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn">Edit Institution</a>
             <a href="{{ url_for('colleges') }}" class="btn">Back to List</a>

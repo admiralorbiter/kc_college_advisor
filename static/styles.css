@@ -493,3 +493,76 @@ footer {
     background-color: #757575;
     color: white;
 }
+
+/* Degree badges */
+.badge-degree {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: 600;
+    margin: 2px;
+}
+
+.badge-associates {
+    background-color: #20c997;
+    color: white;
+}
+
+.badge-bachelors {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+.badge-masters {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.badge-doctoral {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.badge-certificate {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Degree offering indicators */
+.degree-offering {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+}
+
+.degree-offering i {
+    margin-right: 8px;
+}
+
+.degree-offering.offered {
+    color: #198754;
+}
+
+.degree-offering.not-offered {
+    color: #dc3545;
+}
+
+.degree-offering.unknown {
+    color: #6c757d;
+}
+
+/* Highest degree section */
+.highest-degree {
+    display: inline-flex;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.highest-degree i {
+    margin-right: 8px;
+    color: #0d6efd;
+}

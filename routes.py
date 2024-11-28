@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution, InstitutionLevel, InstitutionControl
+from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree
 import pandas as pd
 import csv
 import io
@@ -200,7 +200,10 @@ def import_institutions():
                         'ATHURL': 'right_to_know_url',
                         'DISAURL': 'disability_services_url',
                         'ICLEVEL': 'level',
-                        'CONTROL': 'control'
+                        'CONTROL': 'control',
+                        'HLOFFER': 'highest_degree',
+                        'UGOFFER': 'undergraduate_degree_offered',
+                        'GROFFER': 'graduate_degree_offered'
                     }
                     
                     # Rename columns according to our mapping
@@ -233,6 +236,34 @@ def import_institutions():
                     df['level'] = df['level'].apply(map_level)
                     df['control'] = df['control'].apply(map_control)
                     
+                    # After the existing mapping functions for level and control, add:
+                    def map_highest_degree(value):
+                        try:
+                            value = int(value)
+                            # Map according to the HLOFFER encoding
+                            if value in range(0, 10) or value in [-2, -3] or value == 'b':
+                                return HighestDegree(value)
+                            return HighestDegree(-3)  # Default to "Not Available" for invalid values
+                        except (ValueError, TypeError):
+                            return HighestDegree(-3)
+
+                    def map_degree_offered(value):
+                        try:
+                            value = int(value)
+                            if value == 1:
+                                return True
+                            elif value == 2:
+                                return False
+                            else:
+                                return None  # For -3 or any other values, set as unknown
+                        except (ValueError, TypeError):
+                            return None
+
+                    # Add these conversions after the existing level and control mappings:
+                    df['highest_degree'] = df['highest_degree'].apply(map_highest_degree)
+                    df['undergraduate_degree_offered'] = df['undergraduate_degree_offered'].apply(map_degree_offered)
+                    df['graduate_degree_offered'] = df['graduate_degree_offered'].apply(map_degree_offered)
+                    
                     # Create Institution objects and add to database
                     success_count = 0
                     error_count = 0
@@ -259,7 +290,10 @@ def import_institutions():
                                 right_to_know_url=row['right_to_know_url'],
                                 disability_services_url=row['disability_services_url'],
                                 level=row['level'],
-                                control=row['control']
+                                control=row['control'],
+                                highest_degree=row['highest_degree'],
+                                undergraduate_degree_offered=row['undergraduate_degree_offered'],
+                                graduate_degree_offered=row['graduate_degree_offered']
                             )
                             db.session.add(institution)
                             success_count += 1
