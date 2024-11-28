@@ -1,78 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Institution - KC College Explorer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-</head>
-<body>
-    <header>
-        <h1>Edit Institution</h1>
-        {% include 'nav.html' %}
-    </header>
-    <main>
-        <h2>Edit Institution</h2>
-        <form method="POST" action="{{ url_for('edit_institution', id=institution.id) }}" class="institution-form">
+{% extends "base.html" %}
+
+{% block title %}Edit Institution - KC College Explorer{% endblock %}
+
+{% block header_title %}Edit Institution{% endblock %}
+
+{% block content %}
+    <h2>Edit Institution</h2>
+    <form method="POST" action="{{ url_for('edit_institution', id=institution.id) }}" class="institution-form">
+        <div class="form-group">
+            <label for="name">Institution Name *</label>
+            <input type="text" id="name" name="name" value="{{ institution.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="alias">Alias</label>
+            <input type="text" id="alias" name="alias" value="{{ institution.alias }}">
+        </div>
+
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" id="address" name="address" value="{{ institution.address }}">
+        </div>
+
+        <div class="form-row">
             <div class="form-group">
-                <label for="name">Institution Name *</label>
-                <input type="text" id="name" name="name" value="{{ institution.name }}" required>
-            </div>
-
-            <div class="form-group">
-                <label for="alias">Alias</label>
-                <input type="text" id="alias" name="alias" value="{{ institution.alias }}">
-            </div>
-
-            <div class="form-group">
-                <label for="address">Address</label>
-                <input type="text" id="address" name="address" value="{{ institution.address }}">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="city">City *</label>
-                    <input type="text" id="city" name="city" value="{{ institution.city }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="state">State *</label>
-                    <input type="text" id="state" name="state" value="{{ institution.state }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="zip">ZIP Code</label>
-                    <input type="text" id="zip" name="zip" value="{{ institution.zip }}">
-                </div>
+                <label for="city">City *</label>
+                <input type="text" id="city" name="city" value="{{ institution.city }}" required>
             </div>
 
             <div class="form-group">
-                <label for="web_url">Website URL</label>
-                <input type="url" id="web_url" name="web_url" value="{{ institution.web_url }}">
+                <label for="state">State *</label>
+                <input type="text" id="state" name="state" value="{{ institution.state }}" required>
             </div>
 
             <div class="form-group">
-                <label for="county">County *</label>
-                <input type="text" id="county" name="county" value="{{ institution.county }}" required>
+                <label for="zip">ZIP Code</label>
+                <input type="text" id="zip" name="zip" value="{{ institution.zip }}">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="web_url">Website URL</label>
+            <input type="url" id="web_url" name="web_url" value="{{ institution.web_url }}">
+        </div>
+
+        <div class="form-group">
+            <label for="county">County *</label>
+            <input type="text" id="county" name="county" value="{{ institution.county }}" required>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="latitude">Latitude *</label>
+                <input type="number" id="latitude" name="latitude" step="any" value="{{ institution.latitude }}" required>
             </div>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="latitude">Latitude *</label>
-                    <input type="number" id="latitude" name="latitude" step="any" value="{{ institution.latitude }}" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="longitude">Longitude *</label>
-                    <input type="number" id="longitude" name="longitude" step="any" value="{{ institution.longitude }}" required>
-                </div>
+            <div class="form-group">
+                <label for="longitude">Longitude *</label>
+                <input type="number" id="longitude" name="longitude" step="any" value="{{ institution.longitude }}" required>
             </div>
+        </div>
 
-            <button type="submit" class="submit-btn">Update Institution</button>
-        </form>
-    </main>
-    <footer>
-        <p>&copy; 2024 KC College Explorer. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+        <div class="form-group">
+            <label for="title_iv_eligible">Title IV Eligible</label>
+            <input type="checkbox" id="title_iv_eligible" name="title_iv_eligible" {% if institution.title_iv_eligible %}checked{% endif %}>
+        </div>
+
+        <button type="submit" class="submit-btn">Update Institution</button>
+    </form>
+{% endblock %}

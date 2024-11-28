@@ -1,74 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Website</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% extends "base.html" %}
+
+{% block header_title %}Colleges{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
-</head>
-<body>
-    <header>
-        <h1>Colleges</h1>
-        {% include 'nav.html' %}
-    </header>
-    <main>
-        <h2>Colleges</h2>
-        <div class="action-buttons">
-            <a href="{{ url_for('add_institution') }}" class="btn">Add New Institution</a>
-            <a href="{{ url_for('import_institutions') }}" class="btn">Import Institutions</a>
-        </div>
-        
-        <table class="institutions-table">
-            <thead>
-                <tr>
-                    <th>
-                        <a href="{{ url_for('colleges', sort='name', direction=sort_direction) }}" class="sort-link">
-                            Name <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'name' else '' }}"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('colleges', sort='alias', direction=sort_direction) }}" class="sort-link">
-                            Alias <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'alias' else '' }}"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('colleges', sort='city', direction=sort_direction) }}" class="sort-link">
-                            City <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'city' else '' }}"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('colleges', sort='state', direction=sort_direction) }}" class="sort-link">
-                            State <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'state' else '' }}"></i>
-                        </a>
-                    </th>
-                    <th>
-                        <a href="{{ url_for('colleges', sort='county', direction=sort_direction) }}" class="sort-link">
-                            County <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'county' else '' }}"></i>
-                        </a>
-                    </th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for institution in institutions %}
-                <tr>
-                    <td>{{ institution.name }}</td>
-                    <td>{{ institution.alias }}</td>
-                    <td>{{ institution.city }}</td>
-                    <td>{{ institution.state }}</td>
-                    <td>{{ institution.county }}</td>
-                    <td>
-                        <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn-small">Edit</a>
-                        <a href="{{ url_for('delete_institution', id=institution.id) }}" class="btn-small btn-danger">Delete</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </main>
-    <footer>
-        <p>&copy; 2024 My Website. All rights reserved.</p>
-    </footer>
-</body>
-</html>
+{% endblock %}
+
+{% block content %}
+    <h2>Colleges</h2>
+    <div class="action-buttons">
+        <a href="{{ url_for('add_institution') }}" class="btn">Add New Institution</a>
+        <a href="{{ url_for('import_institutions') }}" class="btn">Import Institutions</a>
+    </div>
+    
+    <div class="search-container">
+        <form method="GET" action="{{ url_for('colleges') }}" class="search-form">
+            <div class="search-group">
+                <input type="text" 
+                       name="name_search" 
+                       placeholder="Search by name or alias..."
+                       value="{{ request.args.get('name_search', '') }}">
+            </div>
+            <div class="search-group">
+                <input type="text" 
+                       name="location_search" 
+                       placeholder="Search by city, state, or county..."
+                       value="{{ request.args.get('location_search', '') }}">
+            </div>
+            <button type="submit" class="btn">Search</button>
+            {% if request.args.get('name_search') or request.args.get('location_search') %}
+                <a href="{{ url_for('colleges') }}" class="btn btn-clear">Clear</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <table class="institutions-table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="{{ url_for('colleges', sort='name', direction=sort_direction) }}" class="sort-link">
+                        Name <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'name' else '' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('colleges', sort='alias', direction=sort_direction) }}" class="sort-link">
+                        Alias <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'alias' else '' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('colleges', sort='city', direction=sort_direction) }}" class="sort-link">
+                        City <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'city' else '' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('colleges', sort='state', direction=sort_direction) }}" class="sort-link">
+                        State <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'state' else '' }}"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="{{ url_for('colleges', sort='county', direction=sort_direction) }}" class="sort-link">
+                        County <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'county' else '' }}"></i>
+                    </a>
+                </th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for institution in institutions %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('view_institution', id=institution.id) }}" class="institution-link">
+                        {{ institution.name }}
+                    </a>
+                </td>
+                <td>{{ institution.alias }}</td>
+                <td>{{ institution.city }}</td>
+                <td>{{ institution.state }}</td>
+                <td>{{ institution.county }}</td>
+                <td>
+                    <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn-small">Edit</a>
+                    <a href="{{ url_for('delete_institution', id=institution.id) }}" class="btn-small btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

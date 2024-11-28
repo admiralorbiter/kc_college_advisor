@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}{{ institution.name }} - KC College Explorer{% endblock %}
+
+{% block header_title %}{{ institution.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="institution-details">
+        <div class="detail-group">
+            <h3>Basic Information</h3>
+            <p><strong>Institution ID:</strong> {{ institution.institution_id }}</p>
+            <p><strong>Alias:</strong> {{ institution.alias or 'N/A' }}</p>
+            <p><strong>Title IV Eligible:</strong> 
+                {% if institution.title_iv_eligible == True %}
+                    <i class="fas fa-check-circle status-icon success"></i> Yes
+                {% elif institution.title_iv_eligible == False %}
+                    <i class="fas fa-times-circle status-icon error"></i> No
+                {% else %}
+                    <i class="fas fa-question-circle status-icon unknown"></i> Unknown
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="detail-group">
+            <h3>Location</h3>
+            <p><strong>Address:</strong> {{ institution.address or 'N/A' }}</p>
+            <p><strong>City:</strong> {{ institution.city }}</p>
+            <p><strong>State:</strong> {{ institution.state }}</p>
+            <p><strong>ZIP:</strong> {{ institution.zip or 'N/A' }}</p>
+            <p><strong>County:</strong> {{ institution.county }}</p>
+            <p><strong>Coordinates:</strong> {{ institution.latitude }}, {{ institution.longitude }}</p>
+        </div>
+
+        <div class="detail-group">
+            <h3>Website</h3>
+            <p><strong>URL:</strong> 
+                {% if institution.web_url %}
+                    <a href="{{ institution.web_url }}" target="_blank">{{ institution.web_url }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="action-buttons">
+            <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn">Edit Institution</a>
+            <a href="{{ url_for('colleges') }}" class="btn">Back to List</a>
+        </div>
+    </div>
+{% endblock %}

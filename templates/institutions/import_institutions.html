@@ -1,50 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Import Institutions - KC College Explorer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+{% extends "base.html" %}
+
+{% block title %}Import Institutions - KC College Explorer{% endblock %}
+
+{% block header_title %}Import Institutions{% endblock %}
+
+{% block extra_css %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
-</head>
-<body>
-    <header>
-        <h1>Import Institutions</h1>
-        {% include 'nav.html' %}
-    </header>
-    
-    <main>
-        <h2>Import Institutions</h2>
-        <div class="import-container">
-            <div class="dropzone" id="dropzone">
-                <div class="dropzone-content">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Drag and drop your CSV file here</p>
-                    <p>or</p>
-                    <label for="fileInput" class="btn">Choose File</label>
-                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
-                </div>
-            </div>
-            <div id="file-info" class="file-info" style="display: none;">
-                <p>Selected file: <span id="filename"></span></p>
-                <button class="btn submit-btn" id="upload-btn">Upload</button>
-            </div>
-            <div id="message-container" class="message-container" style="display: none;">
-                <div class="message">
-                    <i class="fas fa-info-circle message-icon"></i>
-                    <span id="message-text"></span>
-                </div>
-                <div class="import-stats">
-                    <p>Successful imports: <span id="success-count">0</span></p>
-                    <p>Failed imports: <span id="error-count">0</span></p>
-                </div>
+{% endblock %}
+
+{% block content %}
+    <h2>Import Institutions</h2>
+    <div class="import-container">
+        <div class="dropzone" id="dropzone">
+            <div class="dropzone-content">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Drag and drop your CSV file here</p>
+                <p>or</p>
+                <label for="fileInput" class="btn">Choose File</label>
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
             </div>
         </div>
-    </main>
-
-    <footer>
-        <p>&copy; 2024 KC College Explorer. All rights reserved.</p>
-    </footer>
+        <div id="file-info" class="file-info" style="display: none;">
+            <p>Selected file: <span id="filename"></span></p>
+            <button class="btn submit-btn" id="upload-btn">Upload</button>
+        </div>
+        <div id="message-container" class="message-container" style="display: none;">
+            <div class="message">
+                <i class="fas fa-info-circle message-icon"></i>
+                <span id="message-text"></span>
+            </div>
+            <div class="import-stats">
+                <p>Successful imports: <span id="success-count">0</span></p>
+                <p>Failed imports: <span id="error-count">0</span></p>
+            </div>
+        </div>
+    </div>
 
     <script>
         const dropzone = document.getElementById('dropzone');
@@ -149,5 +139,4 @@
             }
         });
     </script>
-</body>
-</html>
+{% endblock %}

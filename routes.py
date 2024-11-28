@@ -13,6 +13,8 @@ def index():
 def colleges():
     sort_by = request.args.get('sort', 'name')
     direction = request.args.get('direction', 'asc')
+    name_search = request.args.get('name_search', '').strip()
+    location_search = request.args.get('location_search', '').strip()
     
     # Toggle sort direction
     sort_direction = 'desc' if direction == 'asc' else 'asc'
@@ -22,9 +24,30 @@ def colleges():
     if direction == 'desc':
         sort_column = sort_column.desc()
     
-    institutions = Institution.query.filter(Institution.state.in_(['MO', 'KS'])) \
-        .order_by(sort_column) \
-        .all()
+    # Start with base query
+    query = Institution.query.filter(Institution.state.in_(['MO', 'KS']))
+    
+    # Apply name search if provided
+    if name_search:
+        query = query.filter(
+            db.or_(
+                Institution.name.ilike(f'%{name_search}%'),
+                Institution.alias.ilike(f'%{name_search}%')
+            )
+        )
+    
+    # Apply location search if provided
+    if location_search:
+        query = query.filter(
+            db.or_(
+                Institution.city.ilike(f'%{location_search}%'),
+                Institution.state.ilike(f'%{location_search}%'),
+                Institution.county.ilike(f'%{location_search}%')
+            )
+        )
+    
+    # Apply sorting and get results
+    institutions = query.order_by(sort_column).all()
     
     # Determine sort icon
     sort_icon = 'down' if direction == 'desc' else 'up'
@@ -39,8 +62,14 @@ def colleges():
 def add_institution():
     if request.method == 'POST':
         try:
+            # Get institution_id from form or use '0' as default
+            institution_id = request.form.get('institution_id', '0')
+            if not institution_id.strip():  # If empty string
+                institution_id = '0'
+
             # Create new institution from form data
             new_institution = Institution(
+                institution_id=institution_id,
                 name=request.form['name'],
                 alias=request.form['alias'],
                 address=request.form['address'],
@@ -62,9 +91,11 @@ def add_institution():
             
         except Exception as e:
             db.session.rollback()
-            flash('Error adding institution. Please try again.', 'error')
+            print(f"Error adding institution: {str(e)}")
+            flash(f'Error adding institution: {str(e)}', 'error')
             return render_template('institutions/add_institution.html', 
                 form_data={
+                    'institution_id': request.form.get('institution_id', '0'),
                     'name': request.form['name'],
                     'alias': request.form['alias'],
                     'address': request.form['address'],
@@ -89,7 +120,6 @@ def delete_institution(id):
 
 @app.route('/institutions/edit/<int:id>', methods=['GET', 'POST'])
 def edit_institution(id):
-    # Get the institution or return 404 if not found
     institution = Institution.query.get_or_404(id)
     
     if request.method == 'POST':
@@ -105,6 +135,7 @@ def edit_institution(id):
             institution.county = request.form['county']
             institution.longitude = float(request.form['longitude'])
             institution.latitude = float(request.form['latitude'])
+            institution.title_iv_eligible = 'title_iv_eligible' in request.form
             
             # Commit changes to database
             db.session.commit()
@@ -117,7 +148,6 @@ def edit_institution(id):
             flash('Error updating institution. Please try again.', 'error')
             return render_template('institutions/edit_institution.html', institution=institution)
     
-    # GET request - show the form with current institution data
     return render_template('institutions/edit_institution.html', institution=institution)
 
 @app.route('/institutions/import', methods=['GET', 'POST'])
@@ -161,7 +191,8 @@ def import_institutions():
                         'WEBADDR': 'web_url',
                         'COUNTYNM': 'county',
                         'LONGITUD': 'longitude',
-                        'LATITUDE': 'latitude'
+                        'LATITUDE': 'latitude',
+                        'OPEFLAG': 'title_iv_eligible'
                     }
                     
                     # Rename columns according to our mapping
@@ -172,6 +203,9 @@ def import_institutions():
                     nullable_fields = ['alias', 'address', 'zip', 'web_url']
                     for field in nullable_fields:
                         df[field] = df[field].replace('', None)
+                    
+                    # Convert OPEFLAG to boolean based on values
+                    df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
                     
                     # Create Institution objects and add to database
                     success_count = 0
@@ -190,7 +224,8 @@ def import_institutions():
                                 web_url=row['web_url'],
                                 county=row['county'],
                                 longitude=float(row['longitude']),
-                                latitude=float(row['latitude'])
+                                latitude=float(row['latitude']),
+                                title_iv_eligible=row['title_iv_eligible']
                             )
                             db.session.add(institution)
                             success_count += 1
@@ -232,5 +267,10 @@ def import_institutions():
     
     # GET request - show the upload form
     return render_template('institutions/import_institutions.html')
+
+@app.route('/institutions/view/<int:id>')
+def view_institution(id):
+    institution = Institution.query.get_or_404(id)
+    return render_template('institutions/view_institution.html', institution=institution)
 
 

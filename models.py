@@ -14,3 +14,4 @@ class Institution(db.Model):
     county = db.Column(db.String(100), nullable=False)
     longitude = db.Column(db.Float, nullable=False)
     latitude = db.Column(db.Float, nullable=False)
+    title_iv_eligible = db.Column(db.Boolean, nullable=True)
