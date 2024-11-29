@@ -473,7 +473,21 @@ def import_ic2023_data(df):
             'SLO82': 'teacher_certification_offered',
             'SLO83': 'no_teacher_certification_offered',
             'SLOA': 'undergraduate_reacher_offered',
-            'SLOB': 'transition_program_for_disabled_students_offered'
+            'SLOB': 'transition_program_for_disabled_students_offered',
+            'STUSRV2': 'academic_counseling_offered',
+            'STUSRV3': 'employment_services_offered',
+            'STUSRV4': 'placement_services_offered',
+            'STUSRV8': 'oncampus_daycare_offered',
+            'STUSRV9': 'no_student_services_offered',
+            'LIBRES1': 'physical_library_offered',
+            'LIBRES2': 'printed_materials_library_offered',
+            'LIBRES3': 'online_library_offered',
+            'LIBRES4': 'trained_librarian_available',
+            'LIBRES5': 'no_library_services_offered',
+            'TUITPL1': 'alternative_tuition_offered',
+            'TUITPL2': 'tuition_guaranteed_plan_offered',
+            'TUITPL3': 'tution_payment_plan_offered',
+            'TUITPL4': 'other_alternative_tuition_offered'
         }
 
         # Rename columns according to mapping
@@ -505,7 +519,21 @@ def import_ic2023_data(df):
                     teacher_certification_offered=clean_enum_value(row['teacher_certification_offered'], StandardizedAnswer),
                     no_teacher_certification_offered=clean_enum_value(row['no_teacher_certification_offered'], StandardizedAnswer),
                     undergraduate_reacher_offered=clean_enum_value(row['undergraduate_reacher_offered'], StandardizedAnswer),
-                    transition_program_for_disabled_students_offered=clean_enum_value(row['transition_program_for_disabled_students_offered'], StandardizedAnswer)
+                    transition_program_for_disabled_students_offered=clean_enum_value(row['transition_program_for_disabled_students_offered'], StandardizedAnswer),
+                    academic_counseling_offered=clean_enum_value(row['academic_counseling_offered'], StandardizedAnswer),
+                    employment_services_offered=clean_enum_value(row['employment_services_offered'], StandardizedAnswer),
+                    placement_services_offered=clean_enum_value(row['placement_services_offered'], StandardizedAnswer),
+                    oncampus_daycare_offered=clean_enum_value(row['oncampus_daycare_offered'], StandardizedAnswer),
+                    no_student_services_offered=clean_enum_value(row['no_student_services_offered'], StandardizedAnswer),
+                    physical_library_offered=clean_enum_value(row['physical_library_offered'], StandardizedAnswer),
+                    printed_materials_library_offered=clean_enum_value(row['printed_materials_library_offered'], StandardizedAnswer),
+                    online_library_offered=clean_enum_value(row['online_library_offered'], StandardizedAnswer),
+                    trained_librarian_available=clean_enum_value(row['trained_librarian_available'], StandardizedAnswer),
+                    no_library_services_offered=clean_enum_value(row['no_library_services_offered'], StandardizedAnswer),
+                    alternative_tuition_offered=clean_enum_value(row['alternative_tuition_offered'], StandardizedAnswer),
+                    tuition_guaranteed_plan_offered=clean_enum_value(row['tuition_guaranteed_plan_offered'], StandardizedAnswer),
+                    tution_payment_plan_offered=clean_enum_value(row['tution_payment_plan_offered'], StandardizedAnswer),
+                    other_alternative_tuition_offered=clean_enum_value(row['other_alternative_tuition_offered'], StandardizedAnswer)
                 )
                 
                 db.session.add(attributes)

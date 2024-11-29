@@ -147,5 +147,119 @@
                 </div>
             </div>
         </div>
+
+        <!-- Student Services -->
+        <div class="detail-group attributes-section">
+            <h3>Student Services</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-user-graduate attribute-icon"></i>
+                    <span class="attribute-label">Academic Counseling:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.academic_counseling_offered.value == 1 else 'no' if attributes.academic_counseling_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.academic_counseling_offered.value == 1 else 'Not Available' if attributes.academic_counseling_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-briefcase attribute-icon"></i>
+                    <span class="attribute-label">Employment Services:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.employment_services_offered.value == 1 else 'no' if attributes.employment_services_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.employment_services_offered.value == 1 else 'Not Available' if attributes.employment_services_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-handshake attribute-icon"></i>
+                    <span class="attribute-label">Placement Services:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.placement_services_offered.value == 1 else 'no' if attributes.placement_services_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.placement_services_offered.value == 1 else 'Not Available' if attributes.placement_services_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-baby attribute-icon"></i>
+                    <span class="attribute-label">On-campus Daycare:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.oncampus_daycare_offered.value == 1 else 'no' if attributes.oncampus_daycare_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.oncampus_daycare_offered.value == 1 else 'Not Available' if attributes.oncampus_daycare_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Services -->
+        <div class="detail-group attributes-section">
+            <h3>Library Services</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-building attribute-icon"></i>
+                    <span class="attribute-label">Physical Library:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.physical_library_offered.value == 1 else 'no' if attributes.physical_library_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.physical_library_offered.value == 1 else 'Not Available' if attributes.physical_library_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-book attribute-icon"></i>
+                    <span class="attribute-label">Print Materials:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.printed_materials_library_offered.value == 1 else 'no' if attributes.printed_materials_library_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.printed_materials_library_offered.value == 1 else 'Not Available' if attributes.printed_materials_library_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-laptop attribute-icon"></i>
+                    <span class="attribute-label">Online Library:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.online_library_offered.value == 1 else 'no' if attributes.online_library_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.online_library_offered.value == 1 else 'Not Available' if attributes.online_library_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-user-tie attribute-icon"></i>
+                    <span class="attribute-label">Trained Librarian:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.trained_librarian_available.value == 1 else 'no' if attributes.trained_librarian_available.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.trained_librarian_available.value == 1 else 'Not Available' if attributes.trained_librarian_available.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alternative Tuition Plans -->
+        <div class="detail-group attributes-section">
+            <h3>Alternative Tuition Plans</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-money-bill-wave attribute-icon"></i>
+                    <span class="attribute-label">Alternative Tuition Plans:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.alternative_tuition_offered.value == 1 else 'no' if attributes.alternative_tuition_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.alternative_tuition_offered.value == 1 else 'Not Available' if attributes.alternative_tuition_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-lock attribute-icon"></i>
+                    <span class="attribute-label">Guaranteed Tuition Plan:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.tuition_guaranteed_plan_offered.value == 1 else 'no' if attributes.tuition_guaranteed_plan_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.tuition_guaranteed_plan_offered.value == 1 else 'Not Available' if attributes.tuition_guaranteed_plan_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-calendar-check attribute-icon"></i>
+                    <span class="attribute-label">Payment Plan:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.tution_payment_plan_offered.value == 1 else 'no' if attributes.tution_payment_plan_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.tution_payment_plan_offered.value == 1 else 'Not Available' if attributes.tution_payment_plan_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-file-invoice-dollar attribute-icon"></i>
+                    <span class="attribute-label">Other Alternative Plans:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.other_alternative_tuition_offered.value == 1 else 'no' if attributes.other_alternative_tuition_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.other_alternative_tuition_offered.value == 1 else 'Not Available' if attributes.other_alternative_tuition_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

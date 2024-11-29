@@ -200,6 +200,21 @@ class Institutional_Attributes(db.Model):
     no_teacher_certification_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
     undergraduate_reacher_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
     transition_program_for_disabled_students_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    academic_counseling_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    employment_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    placement_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    oncampus_daycare_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_student_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    physical_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    printed_materials_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    online_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    trained_librarian_available = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_library_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    alternative_tuition_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    tuition_guaranteed_plan_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    tution_payment_plan_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    other_alternative_tuition_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+
 
     # Define relationship
     institution = db.relationship('Institution', backref=db.backref('institutional_attributes', lazy=True))
