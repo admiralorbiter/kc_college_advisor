@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ institution.name }} - Special Learning Opportunities - KC College Explorer{% endblock %}
+
+{% block header_title %}Special Learning Opportunities at {{ institution.name }}{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+    <div class="institution-details">
+        <!-- Basic Institution Info -->
+        <div class="detail-group">
+            <h3>Institution Overview</h3>
+            <p><strong>Institution:</strong> {{ institution.name }}</p>
+            <p><strong>Location:</strong> {{ institution.city }}, {{ institution.state }}</p>
+            <a href="{{ url_for('view_institution', id=institution.id) }}" class="btn btn-link">
+                <i class="fas fa-arrow-left"></i> Back to Institution Details
+            </a>
+        </div>
+
+        <!-- Credits and Military Programs -->
+        <div class="detail-group attributes-section">
+            <h3>Credits and Military Programs</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-graduation-cap attribute-icon"></i>
+                    <span class="attribute-label">Advanced Placement Credits:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.advance_placement_credits_accepted.value == 1 else 'no' if attributes.advance_placement_credits_accepted.value == 0 else 'unknown' }}">
+                        {{ 'Accepted' if attributes.advance_placement_credits_accepted.value == 1 else 'Not Accepted' if attributes.advance_placement_credits_accepted.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-exchange-alt attribute-icon"></i>
+                    <span class="attribute-label">Credit for Life Experience:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.credit_for_any_credits.value == 1 else 'no' if attributes.credit_for_any_credits.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.credit_for_any_credits.value == 1 else 'Not Available' if attributes.credit_for_any_credits.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-medal attribute-icon"></i>
+                    <span class="attribute-label">ROTC Programs:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.rotc_offered.value == 1 else 'no' if attributes.rotc_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.rotc_offered.value == 1 else 'Not Available' if attributes.rotc_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROTC Details -->
+        <div class="detail-group attributes-section">
+            <h3>ROTC Program Details</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-shield-alt attribute-icon"></i>
+                    <span class="attribute-label">Army ROTC:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.rotc_army_offered.value == 1 else 'no' if attributes.rotc_army_offered.value == 0 else 'unknown' }}">
+                        {{ 'Offered' if attributes.rotc_army_offered.value == 1 else 'Not Offered' if attributes.rotc_army_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-anchor attribute-icon"></i>
+                    <span class="attribute-label">Navy ROTC:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.rotc_navy_offered.value == 1 else 'no' if attributes.rotc_navy_offered.value == 0 else 'unknown' }}">
+                        {{ 'Offered' if attributes.rotc_navy_offered.value == 1 else 'Not Offered' if attributes.rotc_navy_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-fighter-jet attribute-icon"></i>
+                    <span class="attribute-label">Air Force ROTC:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.rotc_airforce_offered.value == 1 else 'no' if attributes.rotc_airforce_offered.value == 0 else 'unknown' }}">
+                        {{ 'Offered' if attributes.rotc_airforce_offered.value == 1 else 'Not Offered' if attributes.rotc_airforce_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-ship attribute-icon"></i>
+                    <span class="attribute-label">Marine Corps Option:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.rotc_marine_offered.value == 1 else 'no' if attributes.rotc_marine_offered.value == 0 else 'unknown' }}">
+                        {{ 'Offered' if attributes.rotc_marine_offered.value == 1 else 'Not Offered' if attributes.rotc_marine_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Academic Programs -->
+        <div class="detail-group attributes-section">
+            <h3>Special Academic Programs</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-globe-americas attribute-icon"></i>
+                    <span class="attribute-label">Study Abroad:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.study_abroad_offered.value == 1 else 'no' if attributes.study_abroad_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.study_abroad_offered.value == 1 else 'Not Available' if attributes.study_abroad_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-calendar-alt attribute-icon"></i>
+                    <span class="attribute-label">Weekend College:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.weekend_college_offered.value == 1 else 'no' if attributes.weekend_college_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.weekend_college_offered.value == 1 else 'Not Available' if attributes.weekend_college_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-universal-access attribute-icon"></i>
+                    <span class="attribute-label">Disability Support Programs:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.transition_program_for_disabled_students_offered.value == 1 else 'no' if attributes.transition_program_for_disabled_students_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.transition_program_for_disabled_students_offered.value == 1 else 'Not Available' if attributes.transition_program_for_disabled_students_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Teacher Preparation -->
+        <div class="detail-group attributes-section">
+            <h3>Teacher Preparation Programs</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-chalkboard-teacher attribute-icon"></i>
+                    <span class="attribute-label">Teacher Preparation:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.teacher_preparation_offered.value == 1 else 'no' if attributes.teacher_preparation_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.teacher_preparation_offered.value == 1 else 'Not Available' if attributes.teacher_preparation_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-user-graduate attribute-icon"></i>
+                    <span class="attribute-label">Specialized Teacher Preparation:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.specialized_teacher_preparation_offered.value == 1 else 'no' if attributes.specialized_teacher_preparation_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.specialized_teacher_preparation_offered.value == 1 else 'Not Available' if attributes.specialized_teacher_preparation_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-certificate attribute-icon"></i>
+                    <span class="attribute-label">Teacher Certification:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.teacher_certification_offered.value == 1 else 'no' if attributes.teacher_certification_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.teacher_certification_offered.value == 1 else 'Not Available' if attributes.teacher_certification_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

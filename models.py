@@ -141,6 +141,12 @@ class CarnegieClassification(IntEnum):
     SPEC_LAW = 31
     SPEC_OTHER = 32
 
+class StandardizedAnswer(IntEnum):
+    NOT_REPORTED = -1
+    NOT_APPLICABLE = -2
+    IMPLIED_NO = 0
+    YES = 1
+
 class Institution(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     institution_id = db.Column(db.String(100), nullable=False)
@@ -175,3 +181,25 @@ class Institution(db.Model):
     institution_category = db.Column(db.Enum(InstitutionCategory), nullable=True)
     size_classification = db.Column(db.Enum(InstitutionSizeClassification), nullable=True)
     carnegie_classification = db.Column(db.Enum(CarnegieClassification), nullable=True)
+
+class Institutional_Attributes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    institution_id = db.Column(db.String(100), db.ForeignKey('institution.institution_id'), nullable=False)
+    advance_placement_credits_accepted = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    credit_for_any_credits = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_army_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_navy_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_airforce_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_marine_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    study_abroad_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    weekend_college_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    teacher_preparation_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    specialized_teacher_preparation_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    teacher_certification_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_teacher_certification_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    undergraduate_reacher_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    transition_program_for_disabled_students_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+
+    # Define relationship
+    institution = db.relationship('Institution', backref=db.backref('institutional_attributes', lazy=True))

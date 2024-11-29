@@ -11,6 +11,12 @@
 {% block content %}
     <h2>Import Institutions</h2>
     <div class="import-container">
+        <div class="import-type-selector">
+            <select id="importType" class="form-select">
+                <option value="hd2023">HD2023 - Institution Details</option>
+                <option value="ic2023">IC2023 - Institutional Characteristics</option>
+            </select>
+        </div>
         <div class="dropzone" id="dropzone">
             <div class="dropzone-content">
                 <i class="fas fa-cloud-upload-alt"></i>
@@ -104,6 +110,7 @@
 
             const formData = new FormData();
             formData.append('file', fileInput.files[0]);
+            formData.append('import_type', document.getElementById('importType').value);
 
             try {
                 const response = await fetch('/institutions/import', {

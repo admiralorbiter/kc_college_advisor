@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification
+from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification, Institutional_Attributes, StandardizedAnswer
 import pandas as pd
 import csv
 import io
@@ -158,6 +158,8 @@ def import_institutions():
             return jsonify({'success': False, 'error': 'No file uploaded'})
         
         file = request.files['file']
+        import_type = request.form.get('import_type', 'hd2023')
+        
         if file.filename == '':
             return jsonify({'success': False, 'error': 'No file selected'})
         
@@ -167,262 +169,20 @@ def import_institutions():
                 temp_path = 'temp_upload.csv'
                 file.save(temp_path)
                 
-                # Read the CSV file directly with pandas
+                # Read the CSV file
                 df = pd.read_csv(temp_path, encoding_errors='replace')
                 
                 # Delete the temporary file
                 os.remove(temp_path)
-                
-                # Map the columns to our model fields
-                column_mapping = {
-                    'UNITID': 'institution_id',
-                    'INSTNM': 'name',
-                    'IALIAS': 'alias',
-                    'ADDR': 'address',
-                    'CITY': 'city',
-                    'STABBR': 'state',
-                    'ZIP': 'zip',
-                    'WEBADDR': 'web_url',
-                    'COUNTYNM': 'county',
-                    'LONGITUD': 'longitude',
-                    'LATITUDE': 'latitude',
-                    'OPEFLAG': 'title_iv_eligible',
-                    'ADMINURL': 'admin_url',
-                    'FAIDURL': 'financial_aid_url',
-                    'APPLURL': 'application_url',
-                    'NPRICURL': 'net_price_calculator_url',
-                    'ATHURL': 'right_to_know_url',
-                    'DISAURL': 'disability_services_url',
-                    'ICLEVEL': 'level',
-                    'CONTROL': 'control',
-                    'HLOFFER': 'highest_degree',
-                    'UGOFFER': 'undergraduate_degree_offered',
-                    'GROFFER': 'graduate_degree_offered',
-                    'HBCU': 'hbcu',
-                    'MEDICAL': 'medical_school',
-                    'LOCALE': 'locale',
-                    'OPENPUBL': 'open_to_public',
-                    'ACT': 'status',
-                    'PSET4FLG': 'pset4_flag',
-                    'INSTCAT': 'institution_category',
-                    'INSTSIZE': 'size_classification',
-                    'C21BASIC': 'carnegie_classification'
-                }
-                
-                # Rename columns according to our mapping
-                df = df[column_mapping.keys()]
-                df = df.rename(columns=column_mapping)
-                
-                # Convert empty strings to None for nullable fields
-                nullable_fields = ['alias', 'address', 'zip', 'web_url']
-                for field in nullable_fields:
-                    df[field] = df[field].replace('', None)
-                
-                # Convert OPEFLAG to boolean based on values
-                df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
-                
-                # Convert level and control to appropriate enum values
-                def map_level(value):
-                    try:
-                        if pd.isna(value):
-                            return None
-                        value = int(value)
-                        return InstitutionLevel(value if value in [-3, 1, 2, 3] else -3)
-                    except (ValueError, TypeError):
-                        return InstitutionLevel.UNKNOWN
 
-                def map_control(value):
-                    try:
-                        if pd.isna(value):
-                            return None
-                        value = int(value)
-                        return InstitutionControl(value if value in [-3, 1, 2, 3] else -3)
-                    except (ValueError, TypeError):
-                        return InstitutionControl.UNKNOWN
+                if import_type == 'hd2023':
+                    result = import_hd2023_data(df)
+                elif import_type == 'ic2023':
+                    result = import_ic2023_data(df)
+                else:
+                    return jsonify({'success': False, 'error': 'Invalid import type'})
 
-                df['level'] = df['level'].apply(map_level)
-                df['control'] = df['control'].apply(map_control)
-                
-                # After the existing mapping functions for level and control, add:
-                def map_highest_degree(value):
-                    try:
-                        if pd.isna(value):
-                            return None
-                        value = int(value)
-                        if value in range(0, 10) or value in [-2, -3] or value == 'b':
-                            return HighestDegree(value)
-                        return HighestDegree(-3)
-                    except (ValueError, TypeError):
-                        return HighestDegree(-3)
-
-                def map_degree_offered(value):
-                    try:
-                        value = int(value)
-                        if value == 1:
-                            return True
-                        elif value == 2:
-                            return False
-                        else:
-                            return None  # For -3 or any other values, set as unknown
-                    except (ValueError, TypeError):
-                        return None
-
-                # Add these conversions after the existing level and control mappings:
-                df['highest_degree'] = df['highest_degree'].apply(map_highest_degree)
-                df['undergraduate_degree_offered'] = df['undergraduate_degree_offered'].apply(map_degree_offered)
-                df['graduate_degree_offered'] = df['graduate_degree_offered'].apply(map_degree_offered)
-                
-                # Convert boolean fields (1=True, 2=False, -3=None)
-                def map_boolean(value):
-                    try:
-                        value = int(value)
-                        if value == 1:
-                            return True
-                        elif value == 2:
-                            return False
-                        else:
-                            return None
-                    except (ValueError, TypeError):
-                        return None
-
-                # Add boolean field mappings
-                boolean_fields = ['hbcu', 'medical_school', 'open_to_public']
-                for field in boolean_fields:
-                    df[field] = df[field].apply(map_boolean)
-
-                # Map enum fields
-                def map_locale(value):
-                    try:
-                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
-                            return InstitutionLocale.UNKNOWN
-                        value = int(float(value))
-                        valid_values = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43]
-                        return InstitutionLocale(value) if value in valid_values else InstitutionLocale.UNKNOWN
-                    except (ValueError, TypeError):
-                        return InstitutionLocale.UNKNOWN
-
-                def map_status(value):
-                    try:
-                        if pd.isna(value) or value == '' or value == ' ':
-                            return None  # Using None since it's nullable
-                        return InstitutionStatus(value) if value in ['A', 'N', 'M', 'R'] else None
-                    except (ValueError, TypeError):
-                        return None
-
-                def map_pset4flag(value):
-                    try:
-                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
-                            return Pset4Flag.UNKNOWN
-                        value = int(float(value))
-                        return Pset4Flag(value) if value in [0, 1, 2, 3, 4, 5, 9] else Pset4Flag.UNKNOWN
-                    except (ValueError, TypeError):
-                        return Pset4Flag.UNKNOWN
-
-                def map_institution_category(value):
-                    try:
-                        if pd.isna(value) or value == '':
-                            return None
-                        value = int(float(value))  # Convert to float first in case it's a decimal
-                        if value in range(1, 7):  # Valid values are 1-6
-                            return InstitutionCategory(value)
-                        return None
-                    except (ValueError, TypeError):
-                        return None
-
-                def map_size_classification(value):
-                    try:
-                        if pd.isna(value) or value == '':
-                            return None
-                        value = int(float(value))
-                        valid_values = [11, 12, 13, 14, 15, 21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 60]
-                        return InstitutionSizeClassification(value) if value in valid_values else None
-                    except (ValueError, TypeError):
-                        return None
-
-                def map_carnegie_classification(value):
-                    try:
-                        if pd.isna(value) or value == '':
-                            return None
-                        value = int(float(value))
-                        return CarnegieClassification(value) if value in range(1, 34) else None
-                    except (ValueError, TypeError):
-                        return None
-
-                # Apply enum mappings
-                df['locale'] = df['locale'].apply(map_locale)
-                df['status'] = df['status'].apply(map_status)
-                df['pset4_flag'] = df['pset4_flag'].apply(map_pset4flag)
-                df['institution_category'] = df['institution_category'].apply(map_institution_category)
-                df['size_classification'] = df['size_classification'].apply(map_size_classification)
-                df['carnegie_classification'] = df['carnegie_classification'].apply(map_carnegie_classification)
-                
-                # Create Institution objects and add to database
-                success_count = 0
-                error_count = 0
-                
-                # General clean_enum_value function for numeric enums
-                def clean_enum_value(value, enum_class):
-                    try:
-                        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
-                            return enum_class.UNKNOWN
-                        value = int(float(value))
-                        return enum_class(value) if value in [e.value for e in enum_class] else enum_class.UNKNOWN
-                    except (ValueError, TypeError):
-                        return enum_class.UNKNOWN
-
-                try:
-                    for _, row in df.iterrows():
-                        institution = Institution(
-                            institution_id=str(row['institution_id']),
-                            name=row['name'],
-                            alias=row['alias'],
-                            address=row['address'],
-                            city=row['city'],
-                            state=row['state'],
-                            zip=row['zip'],
-                            web_url=row['web_url'],
-                            county=row['county'],
-                            longitude=float(row['longitude']),
-                            latitude=float(row['latitude']),
-                            title_iv_eligible=row['title_iv_eligible'],
-                            admin_url=row['admin_url'],
-                            financial_aid_url=row['financial_aid_url'],
-                            application_url=row['application_url'],
-                            net_price_calculator_url=row['net_price_calculator_url'],
-                            right_to_know_url=row['right_to_know_url'],
-                            disability_services_url=row['disability_services_url'],
-                            level=clean_enum_value(row['level'], InstitutionLevel),
-                            control=clean_enum_value(row['control'], InstitutionControl),
-                            highest_degree=clean_enum_value(row['highest_degree'], HighestDegree),
-                            undergraduate_degree_offered=row['undergraduate_degree_offered'],
-                            graduate_degree_offered=row['graduate_degree_offered'],
-                            hbcu=row['hbcu'],
-                            medical_school=row['medical_school'],
-                            locale=clean_enum_value(row['locale'], InstitutionLocale),
-                            open_to_public=row['open_to_public'],
-                            status=map_status(row['status']),
-                            pset4_flag=clean_enum_value(row['pset4_flag'], Pset4Flag),
-                            institution_category=clean_enum_value(row['institution_category'], InstitutionCategory),
-                            size_classification=clean_enum_value(row['size_classification'], InstitutionSizeClassification),
-                            carnegie_classification=clean_enum_value(row['carnegie_classification'], CarnegieClassification)
-                        )
-                        db.session.add(institution)
-                        success_count += 1
-                except Exception as e:
-                    error_count += 1
-                    print(f"Error processing row: {str(e)}")
-                
-                # Commit all successful additions
-                db.session.commit()
-                
-                message = f'Successfully imported {success_count} institutions.'
-                if error_count > 0:
-                    message += f' {error_count} records had errors and were skipped.'
-                
-                return jsonify({
-                    'success': True,
-                    'message': message
-                })
+                return jsonify(result)
                 
             except Exception as e:
                 return jsonify({
@@ -433,9 +193,367 @@ def import_institutions():
     # GET request - show the upload form
     return render_template('institutions/import_institutions.html')
 
+# General clean_enum_value function for numeric enums
+def clean_enum_value(value, enum_class):
+    try:
+        if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+            return enum_class.UNKNOWN
+        value = int(float(value))
+        return enum_class(value) if value in [e.value for e in enum_class] else enum_class.UNKNOWN
+    except (ValueError, TypeError):
+        return enum_class.UNKNOWN
+
+def import_hd2023_data(df):
+    try:
+        # Map the columns to our model fields
+        column_mapping = {
+            'UNITID': 'institution_id',
+            'INSTNM': 'name',
+            'IALIAS': 'alias',
+            'ADDR': 'address',
+            'CITY': 'city',
+            'STABBR': 'state',
+            'ZIP': 'zip',
+            'WEBADDR': 'web_url',
+            'COUNTYNM': 'county',
+            'LONGITUD': 'longitude',
+            'LATITUDE': 'latitude',
+            'OPEFLAG': 'title_iv_eligible',
+            'ADMINURL': 'admin_url',
+            'FAIDURL': 'financial_aid_url',
+            'APPLURL': 'application_url',
+            'NPRICURL': 'net_price_calculator_url',
+            'ATHURL': 'right_to_know_url',
+            'DISAURL': 'disability_services_url',
+            'ICLEVEL': 'level',
+            'CONTROL': 'control',
+            'HLOFFER': 'highest_degree',
+            'UGOFFER': 'undergraduate_degree_offered',
+            'GROFFER': 'graduate_degree_offered',
+            'HBCU': 'hbcu',
+            'MEDICAL': 'medical_school',
+            'LOCALE': 'locale',
+            'OPENPUBL': 'open_to_public',
+            'ACT': 'status',
+            'PSET4FLG': 'pset4_flag',
+            'INSTCAT': 'institution_category',
+            'INSTSIZE': 'size_classification',
+            'C21BASIC': 'carnegie_classification'
+        }
+        
+        # Rename columns according to our mapping
+        df = df[column_mapping.keys()]
+        df = df.rename(columns=column_mapping)
+        
+        # Convert empty strings to None for nullable fields
+        nullable_fields = ['alias', 'address', 'zip', 'web_url']
+        for field in nullable_fields:
+            df[field] = df[field].replace('', None)
+        
+        # Convert OPEFLAG to boolean based on values
+        df['title_iv_eligible'] = df['title_iv_eligible'].apply(lambda x: x in [1, 2])
+        
+        # Convert level and control to appropriate enum values
+        def map_level(value):
+            try:
+                if pd.isna(value):
+                    return None
+                value = int(value)
+                return InstitutionLevel(value if value in [-3, 1, 2, 3] else -3)
+            except (ValueError, TypeError):
+                return InstitutionLevel.UNKNOWN
+
+        def map_control(value):
+            try:
+                if pd.isna(value):
+                    return None
+                value = int(value)
+                return InstitutionControl(value if value in [-3, 1, 2, 3] else -3)
+            except (ValueError, TypeError):
+                return InstitutionControl.UNKNOWN
+
+        df['level'] = df['level'].apply(map_level)
+        df['control'] = df['control'].apply(map_control)
+        
+        def map_highest_degree(value):
+            try:
+                if pd.isna(value):
+                    return None
+                value = int(value)
+                if value in range(0, 10) or value in [-2, -3] or value == 'b':
+                    return HighestDegree(value)
+                return HighestDegree(-3)
+            except (ValueError, TypeError):
+                return HighestDegree(-3)
+
+        def map_degree_offered(value):
+            try:
+                value = int(value)
+                if value == 1:
+                    return True
+                elif value == 2:
+                    return False
+                else:
+                    return None  # For -3 or any other values, set as unknown
+            except (ValueError, TypeError):
+                return None
+
+        df['highest_degree'] = df['highest_degree'].apply(map_highest_degree)
+        df['undergraduate_degree_offered'] = df['undergraduate_degree_offered'].apply(map_degree_offered)
+        df['graduate_degree_offered'] = df['graduate_degree_offered'].apply(map_degree_offered)
+        
+        # Convert boolean fields (1=True, 2=False, -3=None)
+        def map_boolean(value):
+            try:
+                value = int(value)
+                if value == 1:
+                    return True
+                elif value == 2:
+                    return False
+                else:
+                    return None
+            except (ValueError, TypeError):
+                return None
+
+        # Add boolean field mappings
+        boolean_fields = ['hbcu', 'medical_school', 'open_to_public']
+        for field in boolean_fields:
+            df[field] = df[field].apply(map_boolean)
+
+        # Map enum fields
+        def map_locale(value):
+            try:
+                if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+                    return InstitutionLocale.UNKNOWN
+                value = int(float(value))
+                valid_values = [11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43]
+                return InstitutionLocale(value) if value in valid_values else InstitutionLocale.UNKNOWN
+            except (ValueError, TypeError):
+                return InstitutionLocale.UNKNOWN
+
+        def map_status(value):
+            try:
+                if pd.isna(value) or value == '' or value == ' ':
+                    return None  # Using None since it's nullable
+                return InstitutionStatus(value) if value in ['A', 'N', 'M', 'R'] else None
+            except (ValueError, TypeError):
+                return None
+
+        def map_pset4flag(value):
+            try:
+                if pd.isna(value) or value == '' or value == ' ' or value == '-2':
+                    return Pset4Flag.UNKNOWN
+                value = int(float(value))
+                return Pset4Flag(value) if value in [0, 1, 2, 3, 4, 5, 9] else Pset4Flag.UNKNOWN
+            except (ValueError, TypeError):
+                return Pset4Flag.UNKNOWN
+
+        def map_institution_category(value):
+            try:
+                if pd.isna(value) or value == '':
+                    return None
+                value = int(float(value))  # Convert to float first in case it's a decimal
+                if value in range(1, 7):  # Valid values are 1-6
+                    return InstitutionCategory(value)
+                return None
+            except (ValueError, TypeError):
+                return None
+
+        def map_size_classification(value):
+            try:
+                if pd.isna(value) or value == '':
+                    return None
+                value = int(float(value))
+                valid_values = [11, 12, 13, 14, 15, 21, 22, 23, 31, 32, 33, 41, 42, 43, 51, 52, 53, 60]
+                return InstitutionSizeClassification(value) if value in valid_values else None
+            except (ValueError, TypeError):
+                return None
+
+        def map_carnegie_classification(value):
+            try:
+                if pd.isna(value) or value == '':
+                    return None
+                value = int(float(value))
+                return CarnegieClassification(value) if value in range(1, 34) else None
+            except (ValueError, TypeError):
+                return None
+
+        # Apply enum mappings
+        df['locale'] = df['locale'].apply(map_locale)
+        df['status'] = df['status'].apply(map_status)
+        df['pset4_flag'] = df['pset4_flag'].apply(map_pset4flag)
+        df['institution_category'] = df['institution_category'].apply(map_institution_category)
+        df['size_classification'] = df['size_classification'].apply(map_size_classification)
+        df['carnegie_classification'] = df['carnegie_classification'].apply(map_carnegie_classification)
+        
+        # Create Institution objects and add to database
+        success_count = 0
+        error_count = 0
+
+        for _, row in df.iterrows():
+            try:
+                institution = Institution(
+                    institution_id=str(row['institution_id']),
+                    name=row['name'],
+                    alias=row['alias'],
+                    address=row['address'],
+                    city=row['city'],
+                    state=row['state'],
+                    zip=row['zip'],
+                    web_url=row['web_url'],
+                    county=row['county'],
+                    longitude=float(row['longitude']),
+                    latitude=float(row['latitude']),
+                    title_iv_eligible=row['title_iv_eligible'],
+                    admin_url=row['admin_url'],
+                    financial_aid_url=row['financial_aid_url'],
+                    application_url=row['application_url'],
+                    net_price_calculator_url=row['net_price_calculator_url'],
+                    right_to_know_url=row['right_to_know_url'],
+                    disability_services_url=row['disability_services_url'],
+                    level=clean_enum_value(row['level'], InstitutionLevel),
+                    control=clean_enum_value(row['control'], InstitutionControl),
+                    highest_degree=clean_enum_value(row['highest_degree'], HighestDegree),
+                    undergraduate_degree_offered=row['undergraduate_degree_offered'],
+                    graduate_degree_offered=row['graduate_degree_offered'],
+                    hbcu=row['hbcu'],
+                    medical_school=row['medical_school'],
+                    locale=clean_enum_value(row['locale'], InstitutionLocale),
+                    open_to_public=row['open_to_public'],
+                    status=map_status(row['status']),
+                    pset4_flag=clean_enum_value(row['pset4_flag'], Pset4Flag),
+                    institution_category=clean_enum_value(row['institution_category'], InstitutionCategory),
+                    size_classification=clean_enum_value(row['size_classification'], InstitutionSizeClassification),
+                    carnegie_classification=clean_enum_value(row['carnegie_classification'], CarnegieClassification)
+                )
+                db.session.add(institution)
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {str(e)}")
+        
+        # Commit all successful additions
+        db.session.commit()
+        
+        message = f'Successfully imported {success_count} institutions.'
+        if error_count > 0:
+            message += f' {error_count} records had errors and were skipped.'
+        
+        return {
+            'success': True,
+            'message': message
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {
+            'success': False,
+            'error': f'Error importing data: {str(e)}'
+        }
+
+def import_ic2023_data(df):
+    success_count = 0
+    error_count = 0
+    
+    try:
+        # Column mapping from CSV to model fields
+        column_mapping = {
+            'UNITID': 'institution_id',
+            'CREDITS3': 'advance_placement_credits_accepted',
+            'CREDITS4': 'credit_for_any_credits',
+            'SLO5': 'rotc_offered',
+            'SLO51': 'rotc_army_offered',
+            'SLO52': 'rotc_navy_offered',
+            'SLO53': 'rotc_airforce_offered',
+            'SLO521': 'rotc_marine_offered',
+            'SLO6': 'study_abroad_offered',
+            'SLO7': 'weekend_college_offered',
+            'SLO8': 'teacher_preparation_offered',
+            'SLO81': 'specialized_teacher_preparation_offered',
+            'SLO82': 'teacher_certification_offered',
+            'SLO83': 'no_teacher_certification_offered',
+            'SLOA': 'undergraduate_reacher_offered',
+            'SLOB': 'transition_program_for_disabled_students_offered'
+        }
+
+        # Rename columns according to mapping
+        df = df[column_mapping.keys()]
+        df = df.rename(columns=column_mapping)
+
+        for _, row in df.iterrows():
+            try:
+                # Get or skip if institution doesn't exist
+                institution = Institution.query.filter_by(institution_id=str(row['institution_id'])).first()
+                if not institution:
+                    error_count += 1
+                    continue
+
+                # Create new institutional attributes record
+                attributes = Institutional_Attributes(
+                    institution_id=str(row['institution_id']),
+                    advance_placement_credits_accepted=clean_enum_value(row['advance_placement_credits_accepted'], StandardizedAnswer),
+                    credit_for_any_credits=clean_enum_value(row['credit_for_any_credits'], StandardizedAnswer),
+                    rotc_offered=clean_enum_value(row['rotc_offered'], StandardizedAnswer),
+                    rotc_army_offered=clean_enum_value(row['rotc_army_offered'], StandardizedAnswer),
+                    rotc_navy_offered=clean_enum_value(row['rotc_navy_offered'], StandardizedAnswer),
+                    rotc_airforce_offered=clean_enum_value(row['rotc_airforce_offered'], StandardizedAnswer),
+                    rotc_marine_offered=clean_enum_value(row['rotc_marine_offered'], StandardizedAnswer),
+                    study_abroad_offered=clean_enum_value(row['study_abroad_offered'], StandardizedAnswer),
+                    weekend_college_offered=clean_enum_value(row['weekend_college_offered'], StandardizedAnswer),
+                    teacher_preparation_offered=clean_enum_value(row['teacher_preparation_offered'], StandardizedAnswer),
+                    specialized_teacher_preparation_offered=clean_enum_value(row['specialized_teacher_preparation_offered'], StandardizedAnswer),
+                    teacher_certification_offered=clean_enum_value(row['teacher_certification_offered'], StandardizedAnswer),
+                    no_teacher_certification_offered=clean_enum_value(row['no_teacher_certification_offered'], StandardizedAnswer),
+                    undergraduate_reacher_offered=clean_enum_value(row['undergraduate_reacher_offered'], StandardizedAnswer),
+                    transition_program_for_disabled_students_offered=clean_enum_value(row['transition_program_for_disabled_students_offered'], StandardizedAnswer)
+                )
+                
+                db.session.add(attributes)
+                success_count += 1
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {str(e)}")
+                
+        # Commit all successful additions
+        db.session.commit()
+        
+        message = f'Successfully imported {success_count} institutional attributes records.'
+        if error_count > 0:
+            message += f' {error_count} records had errors and were skipped.'
+            
+        return {
+            'success': True,
+            'message': message
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {
+            'success': False,
+            'error': f'Error importing data: {str(e)}'
+        }
+
 @app.route('/institutions/view/<int:id>')
 def view_institution(id):
     institution = Institution.query.get_or_404(id)
     return render_template('institutions/view_institution.html', institution=institution)
+
+@app.route('/institutions/<int:id>/attributes')
+def view_institution_attributes(id):
+    institution = Institution.query.options(
+        db.joinedload(Institution.institutional_attributes)
+    ).get_or_404(id)
+    
+    # Get the first (and should be only) attributes record
+    attributes = institution.institutional_attributes[0] if institution.institutional_attributes else None
+    
+    if not attributes:
+        flash('No attributes data available for this institution.', 'error')
+        return redirect(url_for('view_institution', id=id))
+        
+    return render_template('institutions/attributes.html', 
+                         institution=institution,
+                         attributes=attributes)
 
 
