@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification, Institutional_Attributes, StandardizedAnswer
+from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification, Institutional_Attributes, StandardizedAnswer, MealPlanType
 import pandas as pd
 import csv
 import io
@@ -451,12 +451,28 @@ def import_hd2023_data(df):
             'error': f'Error importing data: {str(e)}'
         }
 
-def import_ic2023_data(df):
-    success_count = 0
-    error_count = 0
-    
+def clean_standardized_answer(value):
+    """Convert numeric values to StandardizedAnswer enum
+    1 = YES
+    2 = NO
+    -2 = UNKNOWN
+    """
     try:
-        # Column mapping from CSV to model fields
+        if pd.isna(value) or value == '' or value == ' ':
+            return StandardizedAnswer.UNKNOWN
+        value = int(float(value))
+        if value == 1:
+            return StandardizedAnswer.YES
+        elif value == 2:
+            return StandardizedAnswer.NO
+        else:
+            return StandardizedAnswer.UNKNOWN
+    except (ValueError, TypeError):
+        return StandardizedAnswer.UNKNOWN
+
+def import_ic2023_data(df):
+    try:
+        # Rest of your column mapping
         column_mapping = {
             'UNITID': 'institution_id',
             'CREDITS3': 'advance_placement_credits_accepted',
@@ -468,11 +484,10 @@ def import_ic2023_data(df):
             'SLO521': 'rotc_marine_offered',
             'SLO6': 'study_abroad_offered',
             'SLO7': 'weekend_college_offered',
-            'SLO8': 'teacher_preparation_offered',
             'SLO81': 'specialized_teacher_preparation_offered',
-            'SLO82': 'teacher_certification_offered',
+            'SLO8': 'teacher_certification_offered',
             'SLO83': 'no_teacher_certification_offered',
-            'SLOA': 'undergraduate_reacher_offered',
+            'SLOA': 'undergraduate_teacher_offered',
             'SLOB': 'transition_program_for_disabled_students_offered',
             'STUSRV2': 'academic_counseling_offered',
             'STUSRV3': 'employment_services_offered',
@@ -486,76 +501,173 @@ def import_ic2023_data(df):
             'LIBRES5': 'no_library_services_offered',
             'TUITPL1': 'alternative_tuition_offered',
             'TUITPL2': 'tuition_guaranteed_plan_offered',
-            'TUITPL3': 'tution_payment_plan_offered',
-            'TUITPL4': 'other_alternative_tuition_offered'
+            'TUITPL3': 'tuition_payment_plan_offered',
+            'TUITPL4': 'other_alternative_tuition_offered',
+            'ALLONCAM': 'required_live_on_campus',
+            'ROOM': 'oncampus_housing_offered',
+            
+            'DISABPCT': 'disabled_students_percentage',
+            'ROOMCAP': 'oncampus_capacity',
+            
+            'BOARD': 'meal_plan_offered',
+            'MEALSWK': 'number_of_meals_per_week',
+            'ROOMAMT': 'housing_charge_per_year',
+            'BOARDAMT': 'meal_plan_charge_per_year',
+            'RMBRDAMT': 'combined_charge_per_year',
+            'APPLFEEU': 'undergraduate_application_fee',
+            'APPLFEEG': 'graduate_application_fee',
+            
+            'ATHASSOC': 'member_of_naa',
+            'ASSOC1': 'member_of_ncaa',
+            'ASSOC2': 'member_of_naia',
+            'ASSOC3': 'member_of_njcaa',
+            'ASSOC4': 'member_of_nscaa',
+            'ASSOC5': 'member_of_nccaa',
+            'ASSOC6': 'member_of_other_athletic_association',
+            'SPORT1': 'member_of_ncaaa_football'
         }
 
-        # Rename columns according to mapping
+        # Convert UNITID to string right after reading
+        df['UNITID'] = df['UNITID'].astype(int).astype(str)
+        
+        def clean_numeric(value):
+            """Clean numeric values from the CSV data"""
+            if pd.isna(value) or (isinstance(value, str) and value.strip() in ['.', '. ', '-2']):
+                return None
+            try:
+                return float(value)
+            except (ValueError, TypeError):
+                return None
+        
+        # Define numeric columns with their original CSV column names
+        integer_columns = {
+            'ROOMCAP': 'oncampus_capacity',
+            'MEALSWK': 'number_of_meals_per_week',
+            'ROOMAMT': 'housing_charge_per_year',
+            'BOARDAMT': 'meal_plan_charge_per_year',
+            'RMBRDAMT': 'combined_charge_per_year',
+            'APPLFEEU': 'undergraduate_application_fee',
+            'APPLFEEG': 'graduate_application_fee'
+        }
+        
+        float_columns = {
+            'DISABPCT': 'disabled_students_percentage'
+        }
+        
+        # Clean numeric columns using original column names
+        for original_col, new_col in integer_columns.items():
+            df[original_col] = df[original_col].map(lambda x: None if pd.isna(x) else 
+                                                  int(float(x)) if isinstance(x, (int, float, str)) and str(x).strip() not in ['', '.', '. ', '-2'] 
+                                                  else None)
+            
+        for original_col, new_col in float_columns.items():
+            df[original_col] = df[original_col].map(lambda x: None if pd.isna(x) else 
+                                                  float(x) if isinstance(x, (int, float, str)) and str(x).strip() not in ['', '.', '. ', '-2'] 
+                                                  else None)
+
+        # Convert numeric values to StandardizedAnswer enum
+        for column in [col for col in df.columns if col.endswith('_offered') or col.endswith('_available')]:
+            df[column] = df[column].apply(clean_standardized_answer)
+        
+        # Rename columns after cleaning
         df = df[column_mapping.keys()]
         df = df.rename(columns=column_mapping)
 
+        success_count = 0
+        error_count = 0
+
         for _, row in df.iterrows():
             try:
-                # Get or skip if institution doesn't exist
                 institution = Institution.query.filter_by(institution_id=str(row['institution_id'])).first()
                 if not institution:
                     error_count += 1
+                    print(f"Institution not found: {row['institution_id']}")
                     continue
 
-                # Create new institutional attributes record
-                attributes = Institutional_Attributes(
-                    institution_id=str(row['institution_id']),
-                    advance_placement_credits_accepted=clean_enum_value(row['advance_placement_credits_accepted'], StandardizedAnswer),
-                    credit_for_any_credits=clean_enum_value(row['credit_for_any_credits'], StandardizedAnswer),
-                    rotc_offered=clean_enum_value(row['rotc_offered'], StandardizedAnswer),
-                    rotc_army_offered=clean_enum_value(row['rotc_army_offered'], StandardizedAnswer),
-                    rotc_navy_offered=clean_enum_value(row['rotc_navy_offered'], StandardizedAnswer),
-                    rotc_airforce_offered=clean_enum_value(row['rotc_airforce_offered'], StandardizedAnswer),
-                    rotc_marine_offered=clean_enum_value(row['rotc_marine_offered'], StandardizedAnswer),
-                    study_abroad_offered=clean_enum_value(row['study_abroad_offered'], StandardizedAnswer),
-                    weekend_college_offered=clean_enum_value(row['weekend_college_offered'], StandardizedAnswer),
-                    teacher_preparation_offered=clean_enum_value(row['teacher_preparation_offered'], StandardizedAnswer),
-                    specialized_teacher_preparation_offered=clean_enum_value(row['specialized_teacher_preparation_offered'], StandardizedAnswer),
-                    teacher_certification_offered=clean_enum_value(row['teacher_certification_offered'], StandardizedAnswer),
-                    no_teacher_certification_offered=clean_enum_value(row['no_teacher_certification_offered'], StandardizedAnswer),
-                    undergraduate_reacher_offered=clean_enum_value(row['undergraduate_reacher_offered'], StandardizedAnswer),
-                    transition_program_for_disabled_students_offered=clean_enum_value(row['transition_program_for_disabled_students_offered'], StandardizedAnswer),
-                    academic_counseling_offered=clean_enum_value(row['academic_counseling_offered'], StandardizedAnswer),
-                    employment_services_offered=clean_enum_value(row['employment_services_offered'], StandardizedAnswer),
-                    placement_services_offered=clean_enum_value(row['placement_services_offered'], StandardizedAnswer),
-                    oncampus_daycare_offered=clean_enum_value(row['oncampus_daycare_offered'], StandardizedAnswer),
-                    no_student_services_offered=clean_enum_value(row['no_student_services_offered'], StandardizedAnswer),
-                    physical_library_offered=clean_enum_value(row['physical_library_offered'], StandardizedAnswer),
-                    printed_materials_library_offered=clean_enum_value(row['printed_materials_library_offered'], StandardizedAnswer),
-                    online_library_offered=clean_enum_value(row['online_library_offered'], StandardizedAnswer),
-                    trained_librarian_available=clean_enum_value(row['trained_librarian_available'], StandardizedAnswer),
-                    no_library_services_offered=clean_enum_value(row['no_library_services_offered'], StandardizedAnswer),
-                    alternative_tuition_offered=clean_enum_value(row['alternative_tuition_offered'], StandardizedAnswer),
-                    tuition_guaranteed_plan_offered=clean_enum_value(row['tuition_guaranteed_plan_offered'], StandardizedAnswer),
-                    tution_payment_plan_offered=clean_enum_value(row['tution_payment_plan_offered'], StandardizedAnswer),
-                    other_alternative_tuition_offered=clean_enum_value(row['other_alternative_tuition_offered'], StandardizedAnswer)
-                )
+                try:
+                    attributes = Institutional_Attributes(
+                        institution_id=str(row['institution_id']),
+                        advance_placement_credits_accepted=clean_enum_value(row['advance_placement_credits_accepted'], StandardizedAnswer),
+                        credit_for_any_credits=clean_enum_value(row['credit_for_any_credits'], StandardizedAnswer),
+                        rotc_offered=clean_enum_value(row['rotc_offered'], StandardizedAnswer),
+                        rotc_army_offered=clean_enum_value(row['rotc_army_offered'], StandardizedAnswer),
+                        rotc_navy_offered=clean_enum_value(row['rotc_navy_offered'], StandardizedAnswer),
+                        rotc_airforce_offered=clean_enum_value(row['rotc_airforce_offered'], StandardizedAnswer),
+                        rotc_marine_offered=clean_enum_value(row['rotc_marine_offered'], StandardizedAnswer),
+                        study_abroad_offered=clean_enum_value(row['study_abroad_offered'], StandardizedAnswer),
+                        weekend_college_offered=clean_enum_value(row['weekend_college_offered'], StandardizedAnswer),
+                        specialized_teacher_preparation_offered=clean_enum_value(row['specialized_teacher_preparation_offered'], StandardizedAnswer),
+                        teacher_certification_offered=clean_enum_value(row['teacher_certification_offered'], StandardizedAnswer),
+                        no_teacher_certification_offered=clean_enum_value(row['no_teacher_certification_offered'], StandardizedAnswer),
+                        undergraduate_teacher_offered=clean_enum_value(row['undergraduate_teacher_offered'], StandardizedAnswer),
+                        transition_program_for_disabled_students_offered=clean_enum_value(row['transition_program_for_disabled_students_offered'], StandardizedAnswer),
+                        academic_counseling_offered=clean_enum_value(row['academic_counseling_offered'], StandardizedAnswer),
+                        employment_services_offered=clean_enum_value(row['employment_services_offered'], StandardizedAnswer),
+                        placement_services_offered=clean_enum_value(row['placement_services_offered'], StandardizedAnswer),
+                        oncampus_daycare_offered=clean_enum_value(row['oncampus_daycare_offered'], StandardizedAnswer),
+                        no_student_services_offered=clean_enum_value(row['no_student_services_offered'], StandardizedAnswer),
+                        physical_library_offered=clean_enum_value(row['physical_library_offered'], StandardizedAnswer),
+                        printed_materials_library_offered=clean_enum_value(row['printed_materials_library_offered'], StandardizedAnswer),
+                        online_library_offered=clean_enum_value(row['online_library_offered'], StandardizedAnswer),
+                        trained_librarian_available=clean_enum_value(row['trained_librarian_available'], StandardizedAnswer),
+                        no_library_services_offered=clean_enum_value(row['no_library_services_offered'], StandardizedAnswer),
+                        alternative_tuition_offered=clean_enum_value(row['alternative_tuition_offered'], StandardizedAnswer),
+                        tuition_guaranteed_plan_offered=clean_enum_value(row['tuition_guaranteed_plan_offered'], StandardizedAnswer),
+                        tuition_payment_plan_offered=clean_enum_value(row['tuition_payment_plan_offered'], StandardizedAnswer),
+                        other_alternative_tuition_offered=clean_enum_value(row['other_alternative_tuition_offered'], StandardizedAnswer),
+                        required_live_on_campus=clean_enum_value(row['required_live_on_campus'], StandardizedAnswer),
+                        oncampus_housing_offered=clean_enum_value(row['oncampus_housing_offered'], StandardizedAnswer),
+                        
+                        disabled_students_percentage=row['disabled_students_percentage'],
+                        oncampus_capacity=row['oncampus_capacity'],
+                        number_of_meals_per_week=row['number_of_meals_per_week'],
+                        housing_charge_per_year=row['housing_charge_per_year'],
+                        meal_plan_charge_per_year=row['meal_plan_charge_per_year'],
+                        combined_charge_per_year=row['combined_charge_per_year'],
+                        undergraduate_application_fee=row['undergraduate_application_fee'],
+                        graduate_application_fee=row['graduate_application_fee'],
+                        
+                        member_of_naa=clean_enum_value(row['member_of_naa'], StandardizedAnswer),
+                        member_of_ncaa=clean_enum_value(row['member_of_ncaa'], StandardizedAnswer),
+                        member_of_naia=clean_enum_value(row['member_of_naia'], StandardizedAnswer),
+                        member_of_njcaa=clean_enum_value(row['member_of_njcaa'], StandardizedAnswer),
+                        member_of_nscaa=clean_enum_value(row['member_of_nscaa'], StandardizedAnswer),
+                        member_of_nccaa=clean_enum_value(row['member_of_nccaa'], StandardizedAnswer),
+                        member_of_other_athletic_association=clean_enum_value(row['member_of_other_athletic_association'], StandardizedAnswer),
+                        member_of_ncaaa_football=clean_enum_value(row['member_of_ncaaa_football'], StandardizedAnswer)
+                    )
+                    db.session.add(attributes)
+                    success_count += 1
+                except Exception as attr_error:
+                    error_count += 1
+                    print(f"Error creating attributes for institution {row['institution_id']}")
+                    print(f"Full error details: {str(attr_error)}")
+                    print(f"Error type: {type(attr_error)}")
+                    
+                    # Print all values for debugging
+                    print("All attribute values:")
+                    for key, value in row.items():
+                        print(f"  {key}: {value} (type: {type(value)})")
                 
-                db.session.add(attributes)
-                success_count += 1
-                
-            except Exception as e:
+            except Exception as row_error:
                 error_count += 1
-                print(f"Error processing row: {str(e)}")
+                print(f"Row level error for institution {row['institution_id']}: {str(row_error)}")
                 
-        # Commit all successful additions
-        db.session.commit()
-        
-        message = f'Successfully imported {success_count} institutional attributes records.'
-        if error_count > 0:
-            message += f' {error_count} records had errors and were skipped.'
+        try:
+            db.session.commit()
+            print(f"Final commit completed. Success: {success_count}, Errors: {error_count}")
+        except Exception as commit_error:
+            print(f"Error during final commit: {str(commit_error)}")
+            db.session.rollback()
             
         return {
-            'success': True,
-            'message': message
+            'success': True if success_count > 0 else False,
+            'message': f'Imported {success_count} records. {error_count} errors.'
         }
         
     except Exception as e:
+        print(f"Top level error: {str(e)}")
+        print(f"Error type: {type(e)}")
         db.session.rollback()
         return {
             'success': False,
@@ -583,5 +695,4 @@ def view_institution_attributes(id):
     return render_template('institutions/attributes.html', 
                          institution=institution,
                          attributes=attributes)
-
 

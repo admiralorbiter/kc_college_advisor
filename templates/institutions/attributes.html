@@ -125,8 +125,8 @@
                 <div class="attribute-item">
                     <i class="fas fa-chalkboard-teacher attribute-icon"></i>
                     <span class="attribute-label">Teacher Preparation:</span>
-                    <span class="attribute-value {{ 'yes' if attributes.teacher_preparation_offered.value == 1 else 'no' if attributes.teacher_preparation_offered.value == 0 else 'unknown' }}">
-                        {{ 'Available' if attributes.teacher_preparation_offered.value == 1 else 'Not Available' if attributes.teacher_preparation_offered.value == 0 else 'Unknown' }}
+                    <span class="attribute-value {{ 'yes' if attributes.undergraduate_teacher_offered.value == 1 else 'no' if attributes.undergraduate_teacher_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.undergraduate_teacher_offered.value == 1 else 'Not Available' if attributes.undergraduate_teacher_offered.value == 0 else 'Unknown' }}
                     </span>
                 </div>
 
@@ -247,8 +247,8 @@
                 <div class="attribute-item">
                     <i class="fas fa-calendar-check attribute-icon"></i>
                     <span class="attribute-label">Payment Plan:</span>
-                    <span class="attribute-value {{ 'yes' if attributes.tution_payment_plan_offered.value == 1 else 'no' if attributes.tution_payment_plan_offered.value == 0 else 'unknown' }}">
-                        {{ 'Available' if attributes.tution_payment_plan_offered.value == 1 else 'Not Available' if attributes.tution_payment_plan_offered.value == 0 else 'Unknown' }}
+                    <span class="attribute-value {{ 'yes' if attributes.tuition_payment_plan_offered.value == 1 else 'no' if attributes.tuition_payment_plan_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.tuition_payment_plan_offered.value == 1 else 'Not Available' if attributes.tuition_payment_plan_offered.value == 0 else 'Unknown' }}
                     </span>
                 </div>
 
@@ -257,6 +257,104 @@
                     <span class="attribute-label">Other Alternative Plans:</span>
                     <span class="attribute-value {{ 'yes' if attributes.other_alternative_tuition_offered.value == 1 else 'no' if attributes.other_alternative_tuition_offered.value == 0 else 'unknown' }}">
                         {{ 'Available' if attributes.other_alternative_tuition_offered.value == 1 else 'Not Available' if attributes.other_alternative_tuition_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Athletics -->
+        <div class="detail-group attributes-section">
+            <h3>Athletic Associations</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-football-ball attribute-icon"></i>
+                    <span class="attribute-label">NCAA:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.member_of_ncaa.value == 1 else 'no' if attributes.member_of_ncaa.value == 0 else 'unknown' }}">
+                        {{ 'Member' if attributes.member_of_ncaa.value == 1 else 'Not Member' if attributes.member_of_ncaa.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-running attribute-icon"></i>
+                    <span class="attribute-label">NAIA:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.member_of_naia.value == 1 else 'no' if attributes.member_of_naia.value == 0 else 'unknown' }}">
+                        {{ 'Member' if attributes.member_of_naia.value == 1 else 'Not Member' if attributes.member_of_naia.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-basketball-ball attribute-icon"></i>
+                    <span class="attribute-label">NJCAA:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.member_of_njcaa.value == 1 else 'no' if attributes.member_of_njcaa.value == 0 else 'unknown' }}">
+                        {{ 'Member' if attributes.member_of_njcaa.value == 1 else 'Not Member' if attributes.member_of_njcaa.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Housing & Meals -->
+        <div class="detail-group attributes-section">
+            <h3>Housing & Meals</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-home attribute-icon"></i>
+                    <span class="attribute-label">On-Campus Housing:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.oncampus_housing_offered.value == 1 else 'no' if attributes.oncampus_housing_offered.value == 0 else 'unknown' }}">
+                        {{ 'Available' if attributes.oncampus_housing_offered.value == 1 else 'Not Available' if attributes.oncampus_housing_offered.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-bed attribute-icon"></i>
+                    <span class="attribute-label">Required to Live on Campus:</span>
+                    <span class="attribute-value {{ 'yes' if attributes.required_live_on_campus.value == 1 else 'no' if attributes.required_live_on_campus.value == 0 else 'unknown' }}">
+                        {{ 'Yes' if attributes.required_live_on_campus.value == 1 else 'No' if attributes.required_live_on_campus.value == 0 else 'Unknown' }}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-utensils attribute-icon"></i>
+                    <span class="attribute-label">Meal Plan:</span>
+                    <span class="attribute-value">
+                        {% if attributes.meal_plan_offered.value == 1 %}
+                            Fixed Plan
+                        {% elif attributes.meal_plan_offered.value == 2 %}
+                            Variable Plan
+                        {% elif attributes.meal_plan_offered.value == 3 %}
+                            Not Offered
+                        {% else %}
+                            Unknown
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Fees -->
+        <div class="detail-group attributes-section">
+            <h3>Application Fees</h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <i class="fas fa-dollar-sign attribute-icon"></i>
+                    <span class="attribute-label">Undergraduate Fee:</span>
+                    <span class="attribute-value">
+                        {% if attributes.undergraduate_application_fee %}
+                            ${{ attributes.undergraduate_application_fee }}
+                        {% else %}
+                            Not Reported
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="attribute-item">
+                    <i class="fas fa-dollar-sign attribute-icon"></i>
+                    <span class="attribute-label">Graduate Fee:</span>
+                    <span class="attribute-value">
+                        {% if attributes.graduate_application_fee %}
+                            ${{ attributes.graduate_application_fee }}
+                        {% else %}
+                            Not Reported
+                        {% endif %}
                     </span>
                 </div>
             </div>
