@@ -891,3 +891,84 @@ def view_institution_completions(id):
                          masters_completions=masters_completions,
                          post_certificates_completions=post_certificates_completions,
                          doctorate_completions=doctorate_completions)
+
+@app.route('/degrees')
+def view_degrees():
+    # Get filter parameters
+    search = request.args.get('search', '').strip().lower()
+    state_filter = request.args.get('state', '')
+    award_filter = request.args.get('award_level', '')
+    sort_by = request.args.get('sort', 'program_classification')
+    direction = request.args.get('direction', 'asc')
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    # Start with base query
+    query = Completitions.query.join(Institution).filter(
+        Institution.state.in_(['KS', 'MO']),
+        Completitions.first_major == '1'
+    )
+    
+    # Apply filters
+    if search:
+        query = query.filter(Completitions.program_classification.ilike(f'%{search}%'))
+    if state_filter:
+        query = query.filter(Institution.state == state_filter)
+    if award_filter:
+        try:
+            award_enum = AwardLevel(int(award_filter))
+            query = query.filter(Completitions.award_level_code == award_enum)
+        except (ValueError, TypeError):
+            pass  # Invalid award filter value, ignore it
+    
+    # Apply sorting
+    if sort_by == 'program_classification':
+        query = query.order_by(
+            Completitions.program_classification.desc() if direction == 'desc' 
+            else Completitions.program_classification
+        )
+    elif sort_by == 'award_level':
+        query = query.order_by(
+            Completitions.award_level_code.desc() if direction == 'desc' 
+            else Completitions.award_level_code
+        )
+    elif sort_by == 'total_completions':
+        query = query.order_by(
+            Completitions.total_completions.desc() if direction == 'desc' 
+            else Completitions.total_completions
+        )
+    
+    # Get paginated results
+    completions = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Calculate completion totals
+    all_completions = query.all()
+    certificates_completions = sum(c.total_completions or 0 for c in all_completions 
+                                if c.award_level_code in [
+                                    AwardLevel.CERTIFICATE_UNDER_1_YEAR,
+                                    AwardLevel.CERTIFICATE_1_YEAR,
+                                    AwardLevel.CERTIFICATE_2_YEAR
+                                ])
+    associates_completions = sum(c.total_completions or 0 for c in all_completions 
+                               if c.award_level_code == AwardLevel.ASSOCIATES)
+    bachelors_completions = sum(c.total_completions or 0 for c in all_completions 
+                              if c.award_level_code == AwardLevel.BACHELORS)
+    masters_completions = sum(c.total_completions or 0 for c in all_completions 
+                            if c.award_level_code == AwardLevel.MASTERS)
+    doctorate_completions = sum(c.total_completions or 0 for c in all_completions 
+                              if c.award_level_code in [
+                                  AwardLevel.DOCTORATE_RESEARCH,
+                                  AwardLevel.DOCTORATE_PROFESSIONAL,
+                                  AwardLevel.DOCTORATE_OTHER
+                              ])
+    
+    return render_template('degrees/degrees.html',
+                         completions=completions,
+                         certificates_completions=certificates_completions,
+                         associates_completions=associates_completions,
+                         bachelors_completions=bachelors_completions,
+                         masters_completions=masters_completions,
+                         doctorate_completions=doctorate_completions,
+                         sort_by=sort_by,
+                         sort_direction=direction,
+                         page=page)

@@ -1,0 +1,211 @@
+
+{% extends "base.html" %}
+
+{% block title %}Degrees - KC College Explorer{% endblock %}
+
+{% block header_title %}Degrees and Programs{% endblock %}
+
+{% block content %}
+    <div class="degrees-container">
+        <!-- Search Form -->
+        <div class="search-container">
+            <form class="search-form" method="GET">
+                <div class="search-group">
+                    <input type="text" 
+                           name="search" 
+                           placeholder="Search programs..."
+                           value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="search-group">
+                    <select name="award_level">
+                        <option value="">All Award Levels</option>
+                        <option value="20" {% if request.args.get('award_level') == '20' %}selected{% endif %}>Certificate (< 1 year)</option>
+                        <option value="21" {% if request.args.get('award_level') == '21' %}selected{% endif %}>Certificate (1 year)</option>
+                        <option value="2" {% if request.args.get('award_level') == '2' %}selected{% endif %}>Certificate (2 year)</option>
+                        <option value="4" {% if request.args.get('award_level') == '4' %}selected{% endif %}>Certificate (4 year)</option>
+                        <option value="3" {% if request.args.get('award_level') == '3' %}selected{% endif %}>Associate's Degree</option>
+                        <option value="5" {% if request.args.get('award_level') == '5' %}selected{% endif %}>Bachelor's Degree</option>
+                        <option value="6" {% if request.args.get('award_level') == '6' %}selected{% endif %}>Post-Baccalaureate Certificate</option>
+                        <option value="7" {% if request.args.get('award_level') == '7' %}selected{% endif %}>Master's Degree</option>
+                        <option value="8" {% if request.args.get('award_level') == '8' %}selected{% endif %}>Post-Master's Certificate</option>
+                        <option value="17" {% if request.args.get('award_level') == '17' %}selected{% endif %}>Doctoral Degree (Research)</option>
+                        <option value="18" {% if request.args.get('award_level') == '18' %}selected{% endif %}>Doctoral Degree (Professional)</option>
+                        <option value="19" {% if request.args.get('award_level') == '19' %}selected{% endif %}>Doctoral Degree (Other)</option>
+                    </select>
+                </div>
+                <div class="search-group">
+                    <select name="state">
+                        <option value="">All States</option>
+                        <option value="MO" {% if request.args.get('state') == 'MO' %}selected{% endif %}>Missouri</option>
+                        <option value="KS" {% if request.args.get('state') == 'KS' %}selected{% endif %}>Kansas</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Search</button>
+                {% if request.args.get('search') or request.args.get('state') or request.args.get('award_level') %}
+                    <a href="{{ url_for('view_degrees') }}" class="btn btn-clear">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Degree Summary -->
+        <div class="detail-group">
+            <h3>
+                <i class="fas fa-chart-pie"></i>
+                Completions Summary by Degree Type
+            </h3>
+            <div class="attributes-grid">
+                <div class="attribute-item">
+                    <div class="attribute-icon">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <span class="attribute-label">Certificates:</span>
+                    <span class="attribute-value">{{ certificates_completions }}</span>
+                </div>
+                <div class="attribute-item">
+                    <div class="attribute-icon">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <span class="attribute-label">Associate's Degrees:</span>
+                    <span class="attribute-value">{{ associates_completions }}</span>
+                </div>
+                <div class="attribute-item">
+                    <div class="attribute-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <span class="attribute-label">Bachelor's Degrees:</span>
+                    <span class="attribute-value">{{ bachelors_completions }}</span>
+                </div>
+                <div class="attribute-item">
+                    <div class="attribute-icon">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <span class="attribute-label">Master's Degrees:</span>
+                    <span class="attribute-value">{{ masters_completions }}</span>
+                </div>
+                <div class="attribute-item">
+                    <div class="attribute-icon">
+                        <i class="fas fa-book-reader"></i>
+                    </div>
+                    <span class="attribute-label">Doctoral Degrees:</span>
+                    <span class="attribute-value">{{ doctorate_completions }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Programs Table -->
+        <div class="completions-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>
+                            <a href="{{ url_for('view_degrees', 
+                                               sort='program_classification',
+                                               direction='desc' if sort_by == 'program_classification' and sort_direction == 'asc' else 'asc',
+                                               search=request.args.get('search', ''),
+                                               state=request.args.get('state', ''),
+                                               award_level=request.args.get('award_level', ''),
+                                               page=page) }}" 
+                               class="sort-link">
+                                Program
+                                {% if sort_by == 'program_classification' %}
+                                    <i class="fas fa-sort-{{ sort_direction }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>Institution</th>
+                        <th>
+                            <a href="{{ url_for('view_degrees', 
+                                               sort='award_level',
+                                               direction='desc' if sort_by == 'award_level' and sort_direction == 'asc' else 'asc',
+                                               search=request.args.get('search', ''),
+                                               state=request.args.get('state', ''),
+                                               award_level=request.args.get('award_level', ''),
+                                               page=page) }}"
+                               class="sort-link">
+                                Award Level
+                                {% if sort_by == 'award_level' %}
+                                    <i class="fas fa-sort-{{ sort_direction }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th>
+                            <a href="{{ url_for('view_degrees', 
+                                               sort='total_completions',
+                                               direction='desc' if sort_by == 'total_completions' and sort_direction == 'asc' else 'asc',
+                                               search=request.args.get('search', ''),
+                                               state=request.args.get('state', ''),
+                                               award_level=request.args.get('award_level', ''),
+                                               page=page) }}"
+                               class="sort-link">
+                                Completions
+                                {% if sort_by == 'total_completions' %}
+                                    <i class="fas fa-sort-{{ sort_direction }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for completion in completions.items %}
+                        <tr>
+                            <td>{{ completion.program_classification }}</td>
+                            <td>
+                                <a href="{{ url_for('view_institution', id=completion.institution.id) }}">
+                                    {{ completion.institution.name }}
+                                </a>
+                            </td>
+                            <td>
+                                <span class="badge badge-award-level">
+                                    {% if completion.award_level_code.value in [2, 4, 21] %}
+                                        Certificate
+                                    {% elif completion.award_level_code.value == 3 %}
+                                        Associate's Degree
+                                    {% elif completion.award_level_code.value == 5 %}
+                                        Bachelor's Degree
+                                    {% elif completion.award_level_code.value == 7 %}
+                                        Master's Degree
+                                    {% elif completion.award_level_code.value in [17, 18, 19] %}
+                                        Doctoral Degree
+                                    {% else %}
+                                        Other Award
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td>{{ completion.total_completions }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if completions.pages > 1 %}
+            <div class="pagination">
+                {% for page_num in completions.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+                    {% if page_num %}
+                        {% if page_num == completions.page %}
+                            <span class="current-page">{{ page_num }}</span>
+                        {% else %}
+                            <a href="{{ url_for('view_degrees', page=page_num, 
+                                               search=request.args.get('search', ''),
+                                               state=request.args.get('state', ''),
+                                               award_level=request.args.get('award_level', ''),
+                                               sort=sort_by,
+                                               direction=sort_direction) }}">
+                                {{ page_num }}
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <span class="ellipsis">...</span>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

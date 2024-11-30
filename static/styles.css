@@ -807,3 +807,74 @@ footer {
     margin-right: 10px;
     min-width: 200px;
 }
+
+/* Degree page styles */
+.degrees-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.degree-section {
+    margin-bottom: 30px;
+}
+
+.degree-section h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.degree-section h2 i {
+    color: #3498db;
+}
+
+.degree-table {
+    overflow-x: auto;
+}
+
+.degree-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.degree-table th,
+.degree-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.degree-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.badge-certificate {
+    background-color: #20c997;
+    color: white;
+}
+
+.badge-associates {
+    background-color: #0dcaf0;
+    color: white;
+}
+
+.badge-bachelors {
+    background-color: #6610f2;
+    color: white;
+}
+
+.badge-masters {
+    background-color: #fd7e14;
+    color: white;
+}
+
+.badge-doctorate {
+    background-color: #dc3545;
+    color: white;
+}
