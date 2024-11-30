@@ -972,3 +972,95 @@ def view_degrees():
                          sort_by=sort_by,
                          sort_direction=direction,
                          page=page)
+
+@app.route('/degrees/summary')
+def view_degrees_summary():
+    # Get filter parameters
+    search = request.args.get('search', '').strip().lower()
+    state_filter = request.args.get('state', '')
+    award_filter = request.args.get('award_level', '')
+    sort_by = request.args.get('sort', 'program_classification')
+    direction = request.args.get('direction', 'asc')
+    page = request.args.get('page', 1, type=int)
+    per_page = 50
+    
+    # Start with base query
+    base_query = db.session.query(
+        Completitions.program_classification,
+        Completitions.award_level_code,
+        db.func.sum(Completitions.total_completions).label('total_completions')
+    ).join(Institution).filter(
+        Institution.state.in_(['KS', 'MO']),
+        Completitions.first_major == '1'
+    ).group_by(
+        Completitions.program_classification,
+        Completitions.award_level_code
+    )
+    
+    # Apply filters
+    if search:
+        base_query = base_query.filter(Completitions.program_classification.ilike(f'%{search}%'))
+    if state_filter:
+        base_query = base_query.filter(Institution.state == state_filter)
+    if award_filter:
+        try:
+            award_enum = AwardLevel(int(award_filter))
+            base_query = base_query.filter(Completitions.award_level_code == award_enum)
+        except (ValueError, TypeError):
+            pass
+    
+    # Apply sorting
+    if sort_by == 'program_classification':
+        base_query = base_query.order_by(
+            Completitions.program_classification.desc() if direction == 'desc' 
+            else Completitions.program_classification
+        )
+    elif sort_by == 'award_level':
+        base_query = base_query.order_by(
+            Completitions.award_level_code.desc() if direction == 'desc' 
+            else Completitions.award_level_code
+        )
+    elif sort_by == 'total_completions':
+        base_query = base_query.order_by(
+            db.desc('total_completions') if direction == 'desc' 
+            else db.asc('total_completions')
+        )
+    
+    # Get paginated results
+    programs = base_query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    # Calculate completion totals
+    all_completions = Completitions.query.join(Institution).filter(
+        Institution.state.in_(['KS', 'MO']),
+        Completitions.first_major == '1'
+    ).all()
+    
+    certificates_completions = sum(c.total_completions or 0 for c in all_completions
+                                if c.award_level_code in [
+                                    AwardLevel.CERTIFICATE_UNDER_1_YEAR,
+                                    AwardLevel.CERTIFICATE_1_YEAR,
+                                    AwardLevel.CERTIFICATE_2_YEAR
+                                ])
+    associates_completions = sum(c.total_completions or 0 for c in all_completions 
+                               if c.award_level_code == AwardLevel.ASSOCIATES)
+    bachelors_completions = sum(c.total_completions or 0 for c in all_completions 
+                              if c.award_level_code == AwardLevel.BACHELORS)
+    masters_completions = sum(c.total_completions or 0 for c in all_completions 
+                            if c.award_level_code == AwardLevel.MASTERS)
+    doctorate_completions = sum(c.total_completions or 0 for c in all_completions 
+                              if c.award_level_code in [
+                                  AwardLevel.DOCTORATE_RESEARCH,
+                                  AwardLevel.DOCTORATE_PROFESSIONAL,
+                                  AwardLevel.DOCTORATE_OTHER
+                              ])
+    
+    return render_template('degrees/degrees_summary.html',
+                         programs=programs,
+                         certificates_completions=certificates_completions,
+                         associates_completions=associates_completions,
+                         bachelors_completions=bachelors_completions,
+                         masters_completions=masters_completions,
+                         doctorate_completions=doctorate_completions,
+                         sort_by=sort_by,
+                         sort_direction=direction,
+                         page=page)

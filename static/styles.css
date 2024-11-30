@@ -878,3 +878,17 @@ footer {
     background-color: #dc3545;
     color: white;
 }
+
+.view-toggle {
+    margin: 1rem 0;
+    text-align: center;
+}
+
+.view-toggle .btn {
+    margin: 0 0.5rem;
+}
+
+.view-toggle .btn.active {
+    background-color: #0056b3;
+    color: white;
+}
