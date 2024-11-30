@@ -9,5 +9,6 @@ class Completitions(db.Model):
     program_classification = db.Column(db.String(100), nullable=False)
     first_major = db.Column(db.String(100), nullable=False)
     award_level_code = db.Column(db.Enum(AwardLevel), nullable=False)
+    total_completions = db.Column(db.Integer, nullable=False)
     
     institution = db.relationship('Institution', backref=db.backref('completitions', lazy=True))

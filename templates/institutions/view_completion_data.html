@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}{{ institution.name }} - Completions Data - KC College Explorer{% endblock %}
+
+{% block header_title %}Completions Data for {{ institution.name }}{% endblock %}
+
+{% block content %}
+    <div class="completions-data">
+        {% if completions %}
+            <div class="completions-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Program Classification</th>
+                            <th>Classification Code</th>
+                            <th>First Major</th>
+                            <th>Award Level</th>
+                            <th>Total Completions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for completion in completions %}
+                            <tr>
+                                <td>{{ completion.program_classification }}</td>
+                                <td>{{ completion.program_classification_code }}</td>
+                                <td>{{ completion.first_major }}</td>
+                                <td>
+                                    {% if completion.award_level_code %}
+                                        <span class="badge badge-award-level">
+                                            {% if completion.award_level_code.value in [2, 3, 4] %}
+                                                Certificate
+                                            {% elif completion.award_level_code.value == 5 %}
+                                                Associate's Degree
+                                            {% elif completion.award_level_code.value == 6 %}
+                                                Bachelor's Degree
+                                            {% elif completion.award_level_code.value == 7 %}
+                                                Master's Degree
+                                            {% elif completion.award_level_code.value == 8 %}
+                                                Doctoral Degree
+                                            {% else %}
+                                                Other Award
+                                            {% endif %}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-unknown">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ completion.total_completions }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="no-data-message">
+                <p>No completions data available for this institution.</p>
+            </div>
+        {% endif %}
+
+        <div class="action-buttons">
+            <a href="{{ url_for('view_institution', id=institution.id) }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Back to Institution
+            </a>
+        </div>
+    </div>
+{% endblock %} 

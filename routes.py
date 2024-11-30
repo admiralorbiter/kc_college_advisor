@@ -774,7 +774,8 @@ def import_c2023_a_data(df):
                     program_classification_code=clean_code,
                     program_classification=program_classification,
                     first_major=row['first_major'],
-                    award_level_code=map_award_level(row['award_level_code'])
+                    award_level_code=map_award_level(row['award_level_code']),
+                    total_completions=row['total_completions']
                 )
                 
                 db.session.add(completion)
@@ -804,3 +805,18 @@ def import_c2023_a_data(df):
             'success': False,
             'error': f'Error importing completion data: {str(e)}'
         }
+
+@app.route('/institutions/<int:id>/completions')
+def view_institution_completions(id):
+    institution = Institution.query.options(
+        db.joinedload(Institution.completitions)
+    ).get_or_404(id)
+    
+    completions = institution.completitions
+    
+    if not completions:
+        flash('No completions data available for this institution.', 'info')
+        
+    return render_template('institutions/view_completion_data.html', 
+                         institution=institution,
+                         completions=completions)
