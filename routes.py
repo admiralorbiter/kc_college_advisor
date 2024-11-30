@@ -4,9 +4,11 @@ import pandas as pd
 import csv
 import io
 import os
+from models.classification_codes import CLASSIFICATION_CODES
 from models.enums import *
 from models.institution import Institution
 from models.institutional_attributes import Institutional_Attributes
+from models.completitions import Completitions
 
 @app.route('/', methods=['GET'])
 def index():
@@ -181,6 +183,8 @@ def import_institutions():
                     result = import_hd2023_data(df)
                 elif import_type == 'ic2023':
                     result = import_ic2023_data(df)
+                elif import_type == 'c2023_a':
+                    result = import_c2023_a_data(df)
                 else:
                     return jsonify({'success': False, 'error': 'Invalid import type'})
 
@@ -698,3 +702,105 @@ def view_institution_attributes(id):
                          institution=institution,
                          attributes=attributes)
 
+def import_c2023_a_data(df):
+    try:
+        # Map the columns to our model fields
+        column_mapping = {
+            'UNITID': 'institution_id',
+            'CIPCODE': 'program_classification_code',
+            'MAJORNUM': 'first_major',
+            'AWLEVEL': 'award_level_code',
+            'CTOTALT': 'total_completions'
+        }
+
+        # Rename columns according to our mapping
+        df = df[column_mapping.keys()]
+        df = df.rename(columns=column_mapping)
+        
+        # Convert UNITID to string
+        df['institution_id'] = df['institution_id'].astype(str)
+        
+        # Clean and convert award level codes
+        def map_award_level(value):
+            try:
+                value = int(float(value))
+                return AwardLevel(value) if value in [2, 3, 4, 5, 6, 7, 8, 17, 18, 19, 20, 21] else None
+            except (ValueError, TypeError):
+                return None
+
+        # Convert 'R' values to None for total_completions
+        def clean_completions(x):
+            if pd.isna(x) or x == 'R':
+                return None
+            try:
+                return float(x)
+            except (ValueError, TypeError):
+                return None
+
+        df['total_completions'] = df['total_completions'].apply(clean_completions)
+
+        success_count = 0
+        error_count = 0
+
+        # Clean classification codes to match dictionary format
+        def clean_classification_code(code):
+            try:
+                # Convert to string and remove trailing zeros after decimal
+                return str(float(code)).rstrip('0').rstrip('.')
+            except (ValueError, TypeError):
+                return str(code)
+
+        for _, row in df.iterrows():
+            try:
+                # Find the institution
+                institution = Institution.query.filter_by(institution_id=str(row['institution_id'])).first()
+                if not institution:
+                    error_count += 1
+                    print(f"Institution not found: {row['institution_id']}")
+                    continue
+
+                # Clean and get program classification
+                clean_code = clean_classification_code(row['program_classification_code'])
+                program_classification = CLASSIFICATION_CODES.get(clean_code)
+                
+                if not program_classification:
+                    error_count += 1
+                    print(f"Classification code not found: {clean_code} (original: {row['program_classification_code']})")
+                    continue
+
+                # Create completion record
+                completion = Completitions(
+                    institution_id=str(row['institution_id']),
+                    program_classification_code=clean_code,
+                    program_classification=program_classification,
+                    first_major=row['first_major'],
+                    award_level_code=map_award_level(row['award_level_code'])
+                )
+                
+                db.session.add(completion)
+                success_count += 1
+                
+                # Report progress every 500 successful imports
+                if success_count % 5000 == 0:
+                    print(f"Successfully processed {success_count} records...")
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {str(e)}")
+                print(f"Row data: {row}")
+                continue
+
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': f'Successfully imported {success_count} completion records. {error_count} errors.'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Top level error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Error importing completion data: {str(e)}'
+        }
