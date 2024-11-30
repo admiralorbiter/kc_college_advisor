@@ -152,3 +152,17 @@ class MealPlanType(IntEnum):
     NO = 3                    # No meal plan offered
     FIXED = 1                 # Fixed number of meals in maximum meal plan
     VARIABLE = 2              # Number of meals per week can vary
+
+class AwardLevel(IntEnum):
+    CERTIFICATE_UNDER_1_YEAR = 20      # Certificates of less than 12 weeks
+    CERTIFICATE_1_YEAR = 21            # Certificates of at least 12 weeks but less than 1 year
+    CERTIFICATE_2_YEAR = 2             # Certificates of at least 1 but less than 2 years
+    CERTIFICATE_4_YEAR = 4             # Certificates of at least 2 but less than 4 years
+    ASSOCIATES = 3                     # Associate's degree
+    BACHELORS = 5                      # Bachelor's degree
+    POST_BACCALAUREATE = 6             # Postbaccalaureate certificate
+    MASTERS = 7                        # Master's degree
+    POST_MASTERS = 8                   # Post-master's certificate
+    DOCTORATE_RESEARCH = 17            # Doctor's degree - research/scholarship
+    DOCTORATE_PROFESSIONAL = 18        # Doctor's degree - professional practice
+    DOCTORATE_OTHER = 19               # Doctor's degree - other
