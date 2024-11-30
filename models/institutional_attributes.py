@@ -1,0 +1,61 @@
+from flask_sqlalchemy import SQLAlchemy
+from app import db
+from .enums import StandardizedAnswer, MealPlanType
+
+class Institutional_Attributes(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    institution_id = db.Column(db.String(100), db.ForeignKey('institution.institution_id'), nullable=False)
+    advance_placement_credits_accepted = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    credit_for_any_credits = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_army_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_navy_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_airforce_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    rotc_marine_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    study_abroad_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    weekend_college_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    undergraduate_teacher_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    specialized_teacher_preparation_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    teacher_certification_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_teacher_certification_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    transition_program_for_disabled_students_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    academic_counseling_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    employment_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    placement_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    oncampus_daycare_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_student_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    physical_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    printed_materials_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    online_library_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    trained_librarian_available = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    no_library_services_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    alternative_tuition_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    tuition_guaranteed_plan_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    tuition_payment_plan_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    other_alternative_tuition_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    
+    required_live_on_campus = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    oncampus_housing_offered = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    
+    disabled_students_percentage = db.Column(db.Float, nullable=True)
+    oncampus_capacity = db.Column(db.Integer, nullable=True)
+    
+    meal_plan_offered = db.Column(db.Enum(MealPlanType), nullable=True)
+    number_of_meals_per_week = db.Column(db.Integer, nullable=True)
+    housing_charge_per_year = db.Column(db.Integer, nullable=True)
+    meal_plan_charge_per_year = db.Column(db.Integer, nullable=True)
+    combined_charge_per_year = db.Column(db.Integer, nullable=True)
+    undergraduate_application_fee = db.Column(db.Integer, nullable=True)
+    graduate_application_fee = db.Column(db.Integer, nullable=True)
+
+    member_of_naa = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_ncaa = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_naia = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_njcaa = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_nscaa = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_nccaa = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_other_athletic_association = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+    member_of_ncaaa_football = db.Column(db.Enum(StandardizedAnswer), nullable=True)
+
+    # Define relationship
+    institution = db.relationship('Institution', backref=db.backref('institutional_attributes', lazy=True))

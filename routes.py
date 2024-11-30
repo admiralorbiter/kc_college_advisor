@@ -1,10 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
-from models import Institution, InstitutionLevel, InstitutionControl, HighestDegree, InstitutionLocale, InstitutionStatus, Pset4Flag, InstitutionCategory, InstitutionSizeClassification, CarnegieClassification, Institutional_Attributes, StandardizedAnswer, MealPlanType
 import pandas as pd
 import csv
 import io
 import os
+from models.enums import *
+from models.institution import Institution
+from models.institutional_attributes import Institutional_Attributes
 
 @app.route('/', methods=['GET'])
 def index():
