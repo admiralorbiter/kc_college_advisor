@@ -16,8 +16,24 @@
                                placeholder="Search programs..."
                                value="{{ request.args.get('search', '') }}">
                     </div>
+                    <div class="search-group">
+                        <select name="award_level">
+                            <option value="">All Award Levels</option>
+                            <option value="2" {% if request.args.get('award_level') == '2' %}selected{% endif %}>Certificate (< 1 year)</option>
+                            <option value="4" {% if request.args.get('award_level') == '4' %}selected{% endif %}>Certificate (1-2 years)</option>
+                            <option value="21" {% if request.args.get('award_level') == '21' %}selected{% endif %}>Certificate (2-4 years)</option>
+                            <option value="3" {% if request.args.get('award_level') == '3' %}selected{% endif %}>Associate's Degree</option>
+                            <option value="5" {% if request.args.get('award_level') == '5' %}selected{% endif %}>Bachelor's Degree</option>
+                            <option value="7" {% if request.args.get('award_level') == '7' %}selected{% endif %}>Master's Degree</option>
+                            <option value="17" {% if request.args.get('award_level') == '17' %}selected{% endif %}>Doctoral Degree (Research)</option>
+                            <option value="18" {% if request.args.get('award_level') == '18' %}selected{% endif %}>Doctoral Degree (Professional)</option>
+                            <option value="19" {% if request.args.get('award_level') == '19' %}selected{% endif %}>Doctoral Degree (Other)</option>
+                            <option value="6" {% if request.args.get('award_level') == '6' %}selected{% endif %}>Post-Baccalaureate Certificate</option>
+                            <option value="8" {% if request.args.get('award_level') == '8' %}selected{% endif %}>Post-Master's Certificate</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn">Search</button>
-                    {% if request.args.get('search') %}
+                    {% if request.args.get('search') or request.args.get('award_level') %}
                         <a href="{{ url_for('view_institution_completions', id=institution.id) }}" 
                            class="btn btn-clear">Clear</a>
                     {% endif %}

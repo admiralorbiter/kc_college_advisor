@@ -816,6 +816,7 @@ def view_institution_completions(id):
     sort_by = request.args.get('sort', 'program_classification')
     direction = request.args.get('direction', 'asc')
     search = request.args.get('search', '').strip().lower()
+    award_filter = request.args.get('award_level', '') 
     
     # Filter completions for first_major = 1
     completions = [c for c in institution.completitions if int(float(c.first_major)) == 1]
@@ -824,6 +825,15 @@ def view_institution_completions(id):
     if search:
         completions = [c for c in completions 
                       if search in c.program_classification.lower()]
+    
+    # Apply award level filter if provided
+    if award_filter:
+        try:
+            award_filter = int(award_filter)
+            completions = [c for c in completions 
+                         if c.award_level_code and c.award_level_code.value == award_filter]
+        except ValueError:
+            pass  # Invalid award filter value, ignore it
     
     # Group completions by degree type
     certificates_completions = sum(c.total_completions or 0 for c in completions 
