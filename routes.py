@@ -812,11 +812,72 @@ def view_institution_completions(id):
         db.joinedload(Institution.completitions)
     ).get_or_404(id)
     
-    completions = institution.completitions
+    # Get sort parameters
+    sort_by = request.args.get('sort', 'program_classification')
+    direction = request.args.get('direction', 'asc')
+    search = request.args.get('search', '').strip().lower()
+    
+    # Filter completions for first_major = 1
+    completions = [c for c in institution.completitions if int(float(c.first_major)) == 1]
+    
+    # Apply search if provided
+    if search:
+        completions = [c for c in completions 
+                      if search in c.program_classification.lower()]
+    
+    # Group completions by degree type
+    certificates_completions = sum(c.total_completions or 0 for c in completions 
+                                if c.award_level_code in [
+                                    AwardLevel.CERTIFICATE_UNDER_1_YEAR,
+                                    AwardLevel.CERTIFICATE_1_YEAR,
+                                    AwardLevel.CERTIFICATE_2_YEAR,
+                                    AwardLevel.CERTIFICATE_4_YEAR
+                                ])
+    
+    associates_completions = sum(c.total_completions or 0 for c in completions 
+                               if c.award_level_code == AwardLevel.ASSOCIATES)
+    
+    bachelors_completions = sum(c.total_completions or 0 for c in completions 
+                              if c.award_level_code == AwardLevel.BACHELORS)
+    
+    masters_completions = sum(c.total_completions or 0 for c in completions 
+                            if c.award_level_code == AwardLevel.MASTERS)
+    
+    post_certificates_completions = sum(c.total_completions or 0 for c in completions 
+                                      if c.award_level_code in [
+                                          AwardLevel.POST_BACCALAUREATE,
+                                          AwardLevel.POST_MASTERS
+                                      ])
+    
+    doctorate_completions = sum(c.total_completions or 0 for c in completions 
+                              if c.award_level_code in [
+                                  AwardLevel.DOCTORATE_RESEARCH,
+                                  AwardLevel.DOCTORATE_PROFESSIONAL,
+                                  AwardLevel.DOCTORATE_OTHER
+                              ])
+    
+    # Apply sorting
+    reverse = direction == 'desc'
+    if sort_by == 'program_classification':
+        completions.sort(key=lambda x: x.program_classification, reverse=reverse)
+    elif sort_by == 'classification_code':
+        completions.sort(key=lambda x: x.program_classification_code, reverse=reverse)
+    elif sort_by == 'award_level':
+        completions.sort(key=lambda x: x.award_level_code.value if x.award_level_code else -1, reverse=reverse)
+    elif sort_by == 'total_completions':
+        completions.sort(key=lambda x: x.total_completions if x.total_completions else 0, reverse=reverse)
     
     if not completions:
         flash('No completions data available for this institution.', 'info')
         
     return render_template('institutions/view_completion_data.html', 
                          institution=institution,
-                         completions=completions)
+                         completions=completions,
+                         sort_by=sort_by,
+                         sort_direction=direction,
+                         certificates_completions=certificates_completions,
+                         associates_completions=associates_completions,
+                         bachelors_completions=bachelors_completions,
+                         masters_completions=masters_completions,
+                         post_certificates_completions=post_certificates_completions,
+                         doctorate_completions=doctorate_completions)

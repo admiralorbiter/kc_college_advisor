@@ -10,6 +10,17 @@
 
 {% block content %}
     <div class="institution-details">
+        <div class="action-buttons">
+            <a href="{{ url_for('view_institution_attributes', id=institution.id) }}" class="btn">
+                <i class="fas fa-list-alt"></i> View Institutional Attributes
+            </a>
+            <a href="{{ url_for('view_institution_completions', id=institution.id) }}" class="btn">
+                <i class="fas fa-graduation-cap"></i> View Completions Data
+            </a>
+            <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn">Edit Institution</a>
+            <a href="{{ url_for('colleges') }}" class="btn">Back to List</a>
+        </div>
+
         <div class="detail-group">
             <h3>Basic Information</h3>
             <p><strong>Institution ID:</strong> {{ institution.institution_id }}</p>
@@ -264,17 +275,6 @@
                     Unknown
                 {% endif %}
             </p>
-        </div>
-
-        <div class="action-buttons">
-            <a href="{{ url_for('view_institution_attributes', id=institution.id) }}" class="btn">
-                <i class="fas fa-list-alt"></i> View Institutional Attributes
-            </a>
-            <a href="{{ url_for('view_institution_completions', id=institution.id) }}" class="btn">
-                <i class="fas fa-graduation-cap"></i> View Completions Data
-            </a>
-            <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn">Edit Institution</a>
-            <a href="{{ url_for('colleges') }}" class="btn">Back to List</a>
         </div>
     </div>
 {% endblock %}
