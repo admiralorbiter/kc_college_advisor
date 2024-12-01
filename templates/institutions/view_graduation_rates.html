@@ -90,6 +90,35 @@
         </div>
         {% endif %}
 
+        <!-- Cohort Summary Section -->
+        <div class="rates-section cohort-summary">
+            <h3><i class="fas fa-users"></i> Cohort Summary</h3>
+            
+            <!-- Four Year Metrics -->
+            {% if graduation_data.four_year %}
+            <div class="metric-group">
+                <h4><i class="fas fa-university"></i> 4-Year Institution Metrics</h4>
+                {% for item in graduation_data.four_year %}
+                    <div class="cohort-group">
+                        <h5>{{ item.cohort.grtype_label }}</h5>
+                        <div class="metrics-grid">
+                            {% for status in item.statuses %}
+                                <div class="metric-item">
+                                    <span class="metric-label">{{ status.chrtstat_label }}:</span>
+                                    <span class="metric-value">{{ status.student_count }}</span>
+                                    {% if status.chrtstat_code != 2 and item.statuses|selectattr('chrtstat_code', 'equalto', 2)|first %}
+                                        {% set base_count = item.statuses|selectattr('chrtstat_code', 'equalto', 2)|first|attr('student_count') %}
+                                        <span class="metric-rate">({{ "%.1f"|format(status.student_count / base_count * 100) }}%)</span>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
         <!-- Legacy Graduation Rates Section -->
         {% if graduation_data.four_year or graduation_data.bachelors or graduation_data.other %}
         <div class="rates-section legacy-rates">

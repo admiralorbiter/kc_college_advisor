@@ -1257,38 +1257,50 @@ def view_graduation_rates(id):
         institution_id=institution.id
     ).first()
     
-    # Get legacy graduation cohorts
+    # Get all cohorts with their statuses using the relationship
     cohorts = GraduationCohort.query.filter_by(
         institution_id=int(institution.institution_id)
+    ).options(
+        db.joinedload(GraduationCohort.statuses)
     ).all()
     
-    # Organize the data by cohort type
+    # Debug output
+    print(f"Found {len(cohorts)} cohorts for institution {institution.id}")
+    for cohort in cohorts:
+        print(f"Cohort {cohort.id}: type={cohort.grtype_code}, label={cohort.grtype_label}")
+        print(f"Statuses: {len(cohort.statuses)}")
+        for status in cohort.statuses:
+            print(f"  - {status.chrtstat_label}: {status.student_count}")
+    
     graduation_data = {
-        'four_year': [],
-        'bachelors': [],
-        'other': []
+        'four_year': [],      # grtype_codes: [2, 3, 4]
+        'bachelors': [],      # grtype_codes: [6, 7, 8, 9]
+        'completers': [],     # grtype_codes: [12, 13, 14, 15]
+        'transfer': [],       # grtype_codes: [16]
+        'enrollment': []      # grtype_codes: [41, 42, 43, 44]
     }
     
+    # Map cohorts to their appropriate categories based on grtype_code
     for cohort in cohorts:
-        # Get all statuses for this cohort
-        statuses = GraduationStatus.query.filter_by(cohort_id=cohort.id).all()
+        cohort_data = {
+            'cohort': cohort,
+            'statuses': sorted(cohort.statuses, key=lambda x: x.chrtstat_code)
+        }
         
-        # Determine which category this cohort belongs to
-        if cohort.grtype_code in [2, 3, 4, 41, 42]:  # 4-year institution codes
-            graduation_data['four_year'].append({
-                'cohort': cohort,
-                'statuses': statuses
-            })
-        elif cohort.grtype_code in [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 43, 44]:  # Bachelor's subcohort codes
-            graduation_data['bachelors'].append({
-                'cohort': cohort,
-                'statuses': statuses
-            })
-        else:  # Other degree/certificate-seeking subcohort codes
-            graduation_data['other'].append({
-                'cohort': cohort,
-                'statuses': statuses
-            })
+        if cohort.grtype_code in [2, 3, 4]:
+            graduation_data['four_year'].append(cohort_data)
+        elif cohort.grtype_code in [6, 7, 8, 9]:
+            graduation_data['bachelors'].append(cohort_data)
+        elif cohort.grtype_code in [12, 13, 14, 15]:
+            graduation_data['completers'].append(cohort_data)
+        elif cohort.grtype_code == 16:
+            graduation_data['transfer'].append(cohort_data)
+        elif cohort.grtype_code in [41, 42, 43, 44]:
+            graduation_data['enrollment'].append(cohort_data)
+    
+    # Sort each category
+    for category in graduation_data.values():
+        category.sort(key=lambda x: x['cohort'].grtype_code)
     
     return render_template(
         'institutions/view_graduation_rates.html',
