@@ -32,8 +32,15 @@
                             <option value="8" {% if request.args.get('award_level') == '8' %}selected{% endif %}>Post-Master's Certificate</option>
                         </select>
                     </div>
+                    <div class="search-group">
+                        <select name="year">
+                            <option value="2023" {% if request.args.get('year', '2023') == '2023' %}selected{% endif %}>2023</option>
+                            <option value="2022" {% if request.args.get('year') == '2022' %}selected{% endif %}>2022</option>
+                            <option value="2021" {% if request.args.get('year') == '2021' %}selected{% endif %}>2021</option>
+                        </select>
+                    </div>
                     <button type="submit" class="btn">Search</button>
-                    {% if request.args.get('search') or request.args.get('award_level') %}
+                    {% if request.args.get('search') or request.args.get('award_level') or request.args.get('year') != '2023' %}
                         <a href="{{ url_for('view_institution_completions', id=institution.id) }}" 
                            class="btn btn-clear">Clear</a>
                     {% endif %}
@@ -113,7 +120,9 @@
                                                    id=institution.id,
                                                    sort='program_classification',
                                                    direction='desc' if sort_by == 'program_classification' and sort_direction == 'asc' else 'asc',
-                                                   search=request.args.get('search', '')) }}" 
+                                                   search=request.args.get('search', ''),
+                                                   award_level=request.args.get('award_level', ''),
+                                                   year=request.args.get('year', '2023')) }}"
                                    class="sort-link">
                                     Program Classification
                                     {% if sort_by == 'program_classification' %}
@@ -128,7 +137,9 @@
                                                    id=institution.id,
                                                    sort='classification_code',
                                                    direction='desc' if sort_by == 'classification_code' and sort_direction == 'asc' else 'asc',
-                                                   search=request.args.get('search', '')) }}"
+                                                   search=request.args.get('search', ''),
+                                                   award_level=request.args.get('award_level', ''),
+                                                   year=request.args.get('year', '2023')) }}"
                                    class="sort-link">
                                     Classification Code
                                     {% if sort_by == 'classification_code' %}
@@ -143,7 +154,9 @@
                                                    id=institution.id,
                                                    sort='award_level',
                                                    direction='desc' if sort_by == 'award_level' and sort_direction == 'asc' else 'asc',
-                                                   search=request.args.get('search', '')) }}"
+                                                   search=request.args.get('search', ''),
+                                                   award_level=request.args.get('award_level', ''),
+                                                   year=request.args.get('year', '2023')) }}"
                                    class="sort-link">
                                     Award Level
                                     {% if sort_by == 'award_level' %}
@@ -158,7 +171,9 @@
                                                    id=institution.id,
                                                    sort='total_completions',
                                                    direction='desc' if sort_by == 'total_completions' and sort_direction == 'asc' else 'asc',
-                                                   search=request.args.get('search', '')) }}"
+                                                   search=request.args.get('search', ''),
+                                                   award_level=request.args.get('award_level', ''),
+                                                   year=request.args.get('year', '2023')) }}"
                                    class="sort-link">
                                     Total Completions
                                     {% if sort_by == 'total_completions' %}

@@ -880,10 +880,12 @@ def view_institution_completions(id):
     sort_by = request.args.get('sort', 'program_classification')
     direction = request.args.get('direction', 'asc')
     search = request.args.get('search', '').strip().lower()
-    award_filter = request.args.get('award_level', '') 
+    award_filter = request.args.get('award_level', '')
+    year = request.args.get('year', '2023')  # Default to 2023
     
-    # Filter completions for first_major = 1
-    completions = [c for c in institution.completitions if int(float(c.first_major)) == 1]
+    # Filter completions for first_major = 1 and specific year
+    completions = [c for c in institution.completitions 
+                  if int(float(c.first_major)) == 1 and c.year == int(year)]
     
     # Apply search if provided
     if search:
