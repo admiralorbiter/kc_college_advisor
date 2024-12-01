@@ -2,6 +2,10 @@
 
 {% block title %}Institution Map{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1 class="mb-4">Institution Map</h1>
@@ -32,6 +36,33 @@
     }
     .leaflet-popup-content a:hover {
         text-decoration: underline;
+    }
+    
+    /* Completion rate styles */
+    .completion-rate {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: bold;
+    }
+    .completion-rate.high {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .completion-rate.medium {
+        background-color: #fff3cd;
+        color: #856404;
+    }
+    .completion-rate.low {
+        background-color: #f8d7da;
+        color: #721c24;
+    }
+    .completion-rate.na {
+        background-color: #e2e3e5;
+        color: #383d41;
+    }
+    .completion-rate i {
+        margin-right: 5px;
     }
 </style>
 {% endblock %}

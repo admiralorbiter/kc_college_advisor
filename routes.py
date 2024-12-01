@@ -1434,18 +1434,78 @@ def map_view():
         Institution.state.in_(['MO', 'KS']),
         Institution.latitude.isnot(None),
         Institution.longitude.isnot(None)
+    ).options(
+        db.joinedload(Institution.graduation_cohorts).joinedload(GraduationCohort.statuses),
+        db.joinedload(Institution.ipeds_graduation_metrics)
     ).all()
     
-    # Create a map centered on Kansas/Missouri border
-    m = folium.Map(location=[38.9, -95.3], zoom_start=7)
+    # Create a map centered on Kansas City
+    m = folium.Map(location=[39.0997, -94.5786], zoom_start=9)  # Changed coordinates and zoom level
     
     # Add markers for each institution
     for inst in institutions:
-        # Create popup content
+        # Calculate completion rate (copied from colleges route)
+        inst.completion_rate = None
+        
+        # First try regular graduation cohorts
+        four_year_cohorts = [c for c in inst.graduation_cohorts if c.grtype_code in [2, 3]]
+        two_year_cohorts = [c for c in inst.graduation_cohorts if c.grtype_code in [29, 30]]
+        
+        if four_year_cohorts:
+            adjusted_cohort = next((c for c in four_year_cohorts if c.grtype_code == 2), None)
+            completers = next((c for c in four_year_cohorts if c.grtype_code == 3), None)
+            
+            if adjusted_cohort and completers and adjusted_cohort.statuses and completers.statuses:
+                total = adjusted_cohort.statuses[0].student_count
+                completed = completers.statuses[0].student_count
+                if total > 0:
+                    inst.completion_rate = (completed / total) * 100
+                    
+        elif two_year_cohorts:
+            adjusted_cohort = next((c for c in two_year_cohorts if c.grtype_code == 29), None)
+            completers = next((c for c in two_year_cohorts if c.grtype_code == 30), None)
+            
+            if adjusted_cohort and completers and adjusted_cohort.statuses and completers.statuses:
+                total = adjusted_cohort.statuses[0].student_count
+                completed = completers.statuses[0].student_count
+                if total > 0:
+                    inst.completion_rate = (completed / total) * 100
+        
+        # If no completion rate found, try IPEDS metrics
+        if inst.completion_rate is None and hasattr(inst, 'ipeds_graduation_metrics'):
+            ipeds = inst.ipeds_graduation_metrics
+            if ipeds and ipeds[0].bachelors_grad_rate_150 is not None:
+                inst.completion_rate = ipeds[0].bachelors_grad_rate_150
+            elif ipeds and ipeds[0].certificate_grad_rate_150 is not None:
+                inst.completion_rate = ipeds[0].certificate_grad_rate_150
+
+        # Create completion rate HTML
+        if inst.completion_rate is not None:
+            rate_class = 'high' if inst.completion_rate >= 70 else 'medium' if inst.completion_rate >= 40 else 'low'
+            icon_class = ('fa-check-circle' if inst.completion_rate >= 70 
+                         else 'fa-exclamation-circle' if inst.completion_rate >= 40 
+                         else 'fa-times-circle')
+            completion_html = f"""
+                <span class="completion-rate {rate_class}">
+                    <i class="fas {icon_class}"></i>
+                    {inst.completion_rate:.1f}%
+                </span>
+            """
+        else:
+            completion_html = """
+                <span class="completion-rate na">
+                    <i class="fas fa-question-circle"></i>
+                    N/A
+                </span>
+            """
+
+        # Create popup content with completion rate
         popup_content = f"""
             <strong>{inst.name}</strong><br>
             {inst.city}, {inst.state}<br>
-            <a href="/institutions/view/{inst.id}" target="_blank">View Details</a>
+            <strong>Completion Rate (2016):</strong><br>
+            {completion_html}<br>
+            <a href="/institutions/{inst.id}/graduation_rates" target="_blank">View Details</a>
         """
         
         # Add marker with popup
