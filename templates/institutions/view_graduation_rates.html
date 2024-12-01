@@ -19,77 +19,6 @@
             </a>
         </div>
 
-        <!-- IPEDS Graduation Metrics Section -->
-        {% if ipeds_metrics %}
-        <div class="rates-section">
-            <h3><i class="fas fa-chart-line"></i> IPEDS Graduation Metrics 2014 Cohorot</h3>
-            
-            <!-- Bachelor's Degree Metrics -->
-            {% if ipeds_metrics.bachelors_revised_cohort %}
-            <div class="metric-group">
-                <h4><i class="fas fa-user-graduate"></i> Bachelor's Degree Completion</h4>
-                <div class="metrics-grid">
-                    <div class="metric-item">
-                        <span class="metric-label">Revised Cohort:</span>
-                        <span class="metric-value">{{ ipeds_metrics.bachelors_revised_cohort }}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 100%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_100pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_100|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 150%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_150pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_150|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 200%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_200pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_200|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Still Enrolled:</span>
-                        <span class="metric-value">{{ ipeds_metrics.bachelors_still_enrolled }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
-            <!-- Certificate/Less than 4-year Metrics -->
-            {% if ipeds_metrics.certificate_revised_cohort %}
-            <div class="metric-group">
-                <h4><i class="fas fa-certificate"></i> Certificate/Less than 4-year Completion</h4>
-                <div class="metrics-grid">
-                    <div class="metric-item">
-                        <span class="metric-label">Revised Cohort:</span>
-                        <span class="metric-value">{{ ipeds_metrics.certificate_revised_cohort }}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 100%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_100pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_100|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 150%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_150pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_150|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Completed in 200%:</span>
-                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_200pct }}</span>
-                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_200|float) }}%)</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Still Enrolled:</span>
-                        <span class="metric-value">{{ ipeds_metrics.certificate_still_enrolled }}</span>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-        </div>
-        {% endif %}
-
         <!-- Cohort Summary Section -->
         {% if graduation_data.four_year %}
         <div class="rates-section cohort-summary">
@@ -169,7 +98,7 @@
 
         {% if graduation_data.two_year %}
         <div class="rates-section cohort-summary">
-            <h3><i class="fas fa-university"></i>2-Year Institution Metrics</h3>
+            <h3><i class="fas fa-users"></i>2016 Cohort Summary</h3>
             <div class="metric-group">
                 <h4><i class="fas fa-graduation-cap"></i> 2-Year Institution Metrics</h4>
                 <div class="cohort-metrics">
@@ -236,6 +165,77 @@
                     {% endfor %}
                 </div>
             </div>
+        </div>
+        {% endif %}
+
+        <!-- IPEDS Graduation Metrics Section -->
+        {% if ipeds_metrics %}
+        <div class="rates-section">
+            <h3><i class="fas fa-chart-line"></i> IPEDS Graduation Metrics 2014 Cohorot</h3>
+            
+            <!-- Bachelor's Degree Metrics -->
+            {% if ipeds_metrics.bachelors_revised_cohort %}
+            <div class="metric-group">
+                <h4><i class="fas fa-user-graduate"></i> Bachelor's Degree Completion</h4>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Revised Cohort:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_revised_cohort }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 100%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_100pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_100|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 150%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_150pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_150|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 200%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_200pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_200|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Still Enrolled:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_still_enrolled }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Certificate/Less than 4-year Metrics -->
+            {% if ipeds_metrics.certificate_revised_cohort %}
+            <div class="metric-group">
+                <h4><i class="fas fa-certificate"></i> Certificate/Less than 4-year Completion</h4>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Revised Cohort:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_revised_cohort }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 100%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_100pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_100|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 150%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_150pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_150|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 200%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_200pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_200|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Still Enrolled:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_still_enrolled }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
