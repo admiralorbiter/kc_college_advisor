@@ -984,7 +984,43 @@ def view_degrees_summary():
     page = request.args.get('page', 1, type=int)
     per_page = 50
     
-    # Start with base query
+    # Start with base query for filtered totals
+    filtered_query = Completitions.query.join(Institution).filter(
+        Institution.state.in_(['KS', 'MO']),
+        Completitions.first_major == '1'
+    )
+    
+    # Apply filters to the totals query
+    if search:
+        filtered_query = filtered_query.filter(Completitions.program_classification.ilike(f'%{search}%'))
+    if state_filter:
+        filtered_query = filtered_query.filter(Institution.state == state_filter)
+    
+    # Get filtered completions for totals
+    filtered_completions = filtered_query.all()
+    
+    # Calculate completion totals using filtered results
+    certificates_completions = sum(c.total_completions or 0 for c in filtered_completions 
+                                if c.award_level_code in [
+                                    AwardLevel.CERTIFICATE_UNDER_1_YEAR,
+                                    AwardLevel.CERTIFICATE_1_YEAR,
+                                    AwardLevel.CERTIFICATE_2_YEAR,
+                                    AwardLevel.CERTIFICATE_4_YEAR
+                                ])
+    associates_completions = sum(c.total_completions or 0 for c in filtered_completions 
+                               if c.award_level_code == AwardLevel.ASSOCIATES)
+    bachelors_completions = sum(c.total_completions or 0 for c in filtered_completions 
+                              if c.award_level_code == AwardLevel.BACHELORS)
+    masters_completions = sum(c.total_completions or 0 for c in filtered_completions 
+                            if c.award_level_code == AwardLevel.MASTERS)
+    doctorate_completions = sum(c.total_completions or 0 for c in filtered_completions 
+                              if c.award_level_code in [
+                                  AwardLevel.DOCTORATE_RESEARCH,
+                                  AwardLevel.DOCTORATE_PROFESSIONAL,
+                                  AwardLevel.DOCTORATE_OTHER
+                              ])
+    
+    # Query for grouped results
     base_query = db.session.query(
         Completitions.program_classification,
         Completitions.award_level_code,
@@ -997,7 +1033,7 @@ def view_degrees_summary():
         Completitions.award_level_code
     )
     
-    # Apply filters
+    # Apply same filters to grouped results
     if search:
         base_query = base_query.filter(Completitions.program_classification.ilike(f'%{search}%'))
     if state_filter:
@@ -1028,31 +1064,6 @@ def view_degrees_summary():
     
     # Get paginated results
     programs = base_query.paginate(page=page, per_page=per_page, error_out=False)
-    
-    # Calculate completion totals
-    all_completions = Completitions.query.join(Institution).filter(
-        Institution.state.in_(['KS', 'MO']),
-        Completitions.first_major == '1'
-    ).all()
-    
-    certificates_completions = sum(c.total_completions or 0 for c in all_completions
-                                if c.award_level_code in [
-                                    AwardLevel.CERTIFICATE_UNDER_1_YEAR,
-                                    AwardLevel.CERTIFICATE_1_YEAR,
-                                    AwardLevel.CERTIFICATE_2_YEAR
-                                ])
-    associates_completions = sum(c.total_completions or 0 for c in all_completions 
-                               if c.award_level_code == AwardLevel.ASSOCIATES)
-    bachelors_completions = sum(c.total_completions or 0 for c in all_completions 
-                              if c.award_level_code == AwardLevel.BACHELORS)
-    masters_completions = sum(c.total_completions or 0 for c in all_completions 
-                            if c.award_level_code == AwardLevel.MASTERS)
-    doctorate_completions = sum(c.total_completions or 0 for c in all_completions 
-                              if c.award_level_code in [
-                                  AwardLevel.DOCTORATE_RESEARCH,
-                                  AwardLevel.DOCTORATE_PROFESSIONAL,
-                                  AwardLevel.DOCTORATE_OTHER
-                              ])
     
     return render_template('degrees/degrees_summary.html',
                          programs=programs,
