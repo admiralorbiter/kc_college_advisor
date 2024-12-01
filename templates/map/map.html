@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Institution Map{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Institution Map</h1>
+    
+    <div class="card">
+        <div class="card-body">
+            <div id="map" style="height: 800px;">
+                {{ map_html | safe }}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .leaflet-popup-content {
+        margin: 10px;
+    }
+    .leaflet-popup-content strong {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .leaflet-popup-content a {
+        display: inline-block;
+        margin-top: 5px;
+        color: #007bff;
+        text-decoration: none;
+    }
+    .leaflet-popup-content a:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}

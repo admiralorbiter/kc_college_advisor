@@ -1,0 +1,5 @@
+flask
+flask-sqlalchemy
+pandas
+folium
+python-dotenv

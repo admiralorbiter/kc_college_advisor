@@ -11,6 +11,7 @@ from models.graduation import GraduationCohort, GraduationStatus, IPEDSGraduatio
 from models.institution import Institution
 from models.institutional_attributes import Institutional_Attributes
 from models.completitions import Completitions
+import folium  # Add this to your imports at the top
 
 @app.route('/', methods=['GET'])
 def index():
@@ -1425,3 +1426,36 @@ def import_gr200_data(df):
             'success': False,
             'error': f'Error importing IPEDS graduation metrics: {str(e)}'
         }
+
+@app.route('/map', methods=['GET'])
+def map_view():
+    # Get all institutions in MO and KS with their coordinates
+    institutions = Institution.query.filter(
+        Institution.state.in_(['MO', 'KS']),
+        Institution.latitude.isnot(None),
+        Institution.longitude.isnot(None)
+    ).all()
+    
+    # Create a map centered on Kansas/Missouri border
+    m = folium.Map(location=[38.9, -95.3], zoom_start=7)
+    
+    # Add markers for each institution
+    for inst in institutions:
+        # Create popup content
+        popup_content = f"""
+            <strong>{inst.name}</strong><br>
+            {inst.city}, {inst.state}<br>
+            <a href="/institutions/view/{inst.id}" target="_blank">View Details</a>
+        """
+        
+        # Add marker with popup
+        folium.Marker(
+            location=[inst.latitude, inst.longitude],
+            popup=folium.Popup(popup_content, max_width=300),
+            tooltip=inst.name
+        ).add_to(m)
+    
+    # Save map to template directory
+    map_html = m._repr_html_()
+    
+    return render_template('map/map.html', map_html=map_html)
