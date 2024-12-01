@@ -1266,27 +1266,24 @@ def view_graduation_rates(id):
 
     # Initialize graduation data structure
     graduation_data = {
-        'four_year': []
+        'four_year': [],
+        'two_year': []  # Add two_year list
     }
 
-    # Filter for only the relevant cohorts (grtype_codes 2, 3, 4, 41, 42)
-    relevant_grtypes = [2, 3, 4, 41, 42]
+    # Filter for relevant cohorts
+    four_year_grtypes = [2, 3, 4, 41, 42]  # 4-year institution codes
+    two_year_grtypes = [28, 29, 30, 31, 32, 33, 47, 48]  # 2-year institution codes
     
     for cohort in cohorts:
-        if cohort.grtype_code in relevant_grtypes:
-            cohort_data = {
-                'cohort': cohort,
-                'statuses': cohort.statuses
-            }
+        cohort_data = {
+            'cohort': cohort,
+            'statuses': cohort.statuses
+        }
+        
+        if cohort.grtype_code in four_year_grtypes:
             graduation_data['four_year'].append(cohort_data)
-
-    # Debug output
-    print(f"Found {len(cohorts)} cohorts for institution {institution.id}")
-    for cohort in cohorts:
-        print(f"Cohort {cohort.id}: type={cohort.grtype_code}, label={cohort.grtype_label}")
-        print(f"Statuses: {len(cohort.statuses)}")
-        for status in cohort.statuses:
-            print(f"  - {status.chrtstat_label}: {status.student_count}")
+        elif cohort.grtype_code in two_year_grtypes:
+            graduation_data['two_year'].append(cohort_data)
 
     return render_template(
         'institutions/view_graduation_rates.html',
