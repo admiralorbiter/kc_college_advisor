@@ -6,6 +6,7 @@ import io
 import os
 from models.classification_codes import CLASSIFICATION_CODES
 from models.enums import *
+from models.graduation import GraduationCohort, GraduationStatus
 from models.institution import Institution
 from models.institutional_attributes import Institutional_Attributes
 from models.completitions import Completitions
@@ -192,6 +193,8 @@ def import_institutions():
                     result = import_ic2023_data(df)
                 elif import_type == 'c2023_a':
                     result = import_c2023_a_data(df, year)
+                elif import_type == 'gr2022':
+                    result = import_gr2022_data(df)
                 else:
                     return jsonify({'success': False, 'error': 'Invalid import type'})
 
@@ -1088,3 +1091,205 @@ def view_degrees_summary():
                          sort_by=sort_by,
                          sort_direction=direction,
                          page=page)
+
+def import_gr2022_data(df):
+    try:
+        # Map the columns to our model fields
+        column_mapping = {
+            'UNITID': 'institution_id',
+            'GRTYPE': 'grtype_code',
+            'CHRTSTAT': 'chrtstat_code',
+            'SECTION': 'section_code',
+            'GRTOTLT': 'student_count'  # Total count of students
+        }
+
+        # Create lookup dictionaries for labels based on the provided codes
+        grtype_labels = {
+            40: "Total exclusions 4-year schools",
+            2: "4-year institutions, Adjusted cohort (revised cohort minus exclusions)",
+            3: "4-year institutions, Completers within 150% of normal time",
+            4: "4-year institutions, Transfer-out students",
+            41: "4-year institutions, noncompleters still enrolled",
+            42: "4-year institutions, No longer enrolled",
+            6: "Bachelor's or equiv subcohort (4-yr institution)",
+            7: "Bachelor's or equiv subcohort (4-yr institution) exclusions",
+            8: "Bachelor's or equiv subcohort (4-yr institution) adjusted cohort",
+            9: "Bachelor's or equiv subcohort (4-yr institution) Completers within 150% of normal time total",
+            10: "Bachelor's or equiv subcohort (4-yr institution) Completers of programs of < 2 yrs (150% of normal time)",
+            11: "Bachelor's or equiv subcohort (4-yr institution) Completers of programs of 2 but <4 yrs (150% of normal time)",
+            12: "Bachelor's or equiv subcohort (4-yr institution) Completers of bachelor's or equiv degrees total (150% of normal time)",
+            13: "Bachelor's or equiv subcohort (4-yr institution) Completers of bachelor's or equiv degrees in 4 years or less",
+            14: "Bachelor's or equiv subcohort (4-yr institution) Completers of bachelor's or equiv degrees in 5 years",
+            15: "Bachelor's or equiv subcohort (4-yr institution) Completers of bachelor's or equiv degrees in 6 years",
+            16: "Bachelor's or equiv subcohort (4-yr institution) Transfer-out students",
+            43: "Bachelor's or equiv subcohort (4-yr institution) noncompleters still enrolled",
+            44: "Bachelor's or equiv subcohort (4-yr institution), No longer enrolled",
+            18: "Other degree/certif-seeking subcohort (4-yr institution)",
+            19: "Other degree/certificate-seeking subcohort(4-yr institution) exclusions",
+            20: "Other degree/certif-seeking subcohort (4-yr institution) Adjusted cohort",
+            21: "Other degree/certif-seeking subcohort (4-yr institution) Completers within 150% of normal time total",
+            22: "Other degree/certif-seeking subcohort (4-yr institution) Completers of programs < 2 yrs (150% of normal time)",
+            23: "Other degree/certif-seeking subcohort (4-yr institution) Completers of programs of 2 but < 4 yrs (150% of normal time)",
+            24: "Other degree/certif-seeking subcohort (4-yr institution) Completers of bachelor's or equiv degrees (150% of normal time)",
+            25: "Other degree/certif-seeking subcohort (4-yr institution) Transfer-out students",
+            45: "Other degree/certif-seeking subcohort (4-yr institution) noncompleters still enrolled",
+            46: "Other degree/certif-seeking subcohort (4-yr institution) No longer enrolled",
+            28: "Degree/certificate-seeking subcohort(2-yr institution) exclusions",
+            29: "Degree/certif-seeking students ( 2-yr institution) Adjusted cohort",
+            30: "Degree/certif-seeking students ( 2-yr institution) Completers within 150% of normal time total",
+            31: "Degree/certif-seeking students ( 2-yr institution) Completers of programs of < 2 yrs (150% of normal time)",
+            32: "Degree/certificate-seeking students ( 2-yr institution) Completers of programs of 2 but < 4 yrs (150% of normal time)",
+            35: "Degree/certif-seeking students ( 2-yr institution) Completers within 100% of normal time total",
+            36: "Degree/certif-seeking students ( 2-yr institution) Completers of programs of < 2 yrs (100% of normal time)",
+            37: "Degree/certif-seeking students ( 2-yr institution) Completers of programs of 2 but < 4 yrs (100% of normal time)",
+            33: "Degree/certif-seeking students ( 2-yr institution) Transfer-out students",
+            47: "Degree/certif-seeking students ( 2-yr institution) noncompleters still enrolled",
+            48: "Degree/certif-seeking students ( 2-yr institution) No longer enrolled"
+        }
+
+        chrtstat_labels = {
+            40: "Total exclusions 4-year schools",
+            2: "4-year institutions, Adjusted cohort",
+            3: "4-year institutions, Completers within 150% of normal time",
+            4: "4-year institutions, Transfer-out students",
+            41: "4-year institutions, noncompleters still enrolled",
+            42: "4-year institutions, No longer enrolled",
+            6: "Bachelor's or equiv subcohort",
+            7: "Bachelor's or equiv subcohort exclusions",
+            8: "Bachelor's or equiv subcohort adjusted cohort",
+            9: "Completers within 150% of normal time total",
+            10: "Completers of programs of < 2 yrs",
+            11: "Completers of programs of 2 but <4 yrs",
+            12: "Completers of bachelor's or equiv degrees total",
+            13: "Completers of bachelor's or equiv degrees in 4 years or less",
+            14: "Completers of bachelor's or equiv degrees in 5 years",
+            15: "Completers of bachelor's or equiv degrees in 6 years",
+            16: "Transfer-out students",
+            43: "Noncompleters still enrolled",
+            44: "No longer enrolled"
+        }
+
+        section_labels = {
+            1: "First-time, full-time student cohort",
+            2: "Bachelor's or equivalent degree-seeking subcohort"
+        }
+
+        success_count = 0
+        error_count = 0
+
+        # Group by institution and GRTYPE to create cohorts
+        for (inst_id, grtype), group in df.groupby(['UNITID', 'GRTYPE']):
+            try:
+                # Find the institution
+                institution = Institution.query.filter_by(institution_id=str(inst_id)).first()
+                if not institution:
+                    error_count += 1
+                    print(f"Institution not found: {inst_id}")
+                    continue
+
+                # Create or update the graduation cohort
+                section_code = group['SECTION'].iloc[0] if 'SECTION' in group.columns else None
+                
+                cohort = GraduationCohort(
+                    institution_id=int(inst_id),
+                    grtype_code=int(grtype),
+                    grtype_label=grtype_labels.get(int(grtype), 'Unknown'),
+                    section_code=section_code,
+                    section_label=section_labels.get(section_code) if section_code else None
+                )
+                db.session.add(cohort)
+                db.session.flush()  # Get the cohort ID
+
+                # Create graduation statuses for each CHRTSTAT in the group
+                for _, row in group.iterrows():
+                    if pd.notna(row['CHRTSTAT']):
+                        chrtstat_code = int(row['CHRTSTAT'])
+                        student_count = row['GRTOTLT']
+                        
+                        # Skip if student count is 'R' (restricted) or invalid
+                        if isinstance(student_count, str) and student_count.strip() == 'R':
+                            continue
+                            
+                        try:
+                            student_count = int(float(student_count))
+                        except (ValueError, TypeError):
+                            continue
+
+                        status = GraduationStatus(
+                            cohort_id=cohort.id,
+                            chrtstat_code=chrtstat_code,
+                            chrtstat_label=chrtstat_labels.get(chrtstat_code, 'Unknown'),
+                            student_count=student_count
+                        )
+                        db.session.add(status)
+
+                success_count += 1
+
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing institution {inst_id}: {str(e)}")
+                db.session.rollback()
+                continue
+
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': f'Successfully imported {success_count} graduation cohorts. {error_count} errors.'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Top level error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Error importing graduation data: {str(e)}'
+        }
+
+@app.route('/institutions/<int:id>/graduation_rates')
+def view_graduation_rates(id):
+    institution = Institution.query.get_or_404(id)
+    
+    # Get all graduation cohorts for this institution
+    cohorts = GraduationCohort.query.filter_by(
+        institution_id=int(institution.institution_id)
+    ).all()
+    
+    # Add debug logging
+    print(f"Looking for graduation rates for institution_id {institution.institution_id}")
+    print(f"Found {len(cohorts)} cohorts")
+    
+    # Organize the data by cohort type
+    graduation_data = {
+        'four_year': [],
+        'bachelors': [],
+        'other': []
+    }
+    
+    for cohort in cohorts:
+        # Get all statuses for this cohort
+        statuses = GraduationStatus.query.filter_by(cohort_id=cohort.id).all()
+        print(f"Cohort {cohort.id} has {len(statuses)} status records")
+        
+        # Determine which category this cohort belongs to
+        if cohort.grtype_code in [2, 3, 4, 41, 42]:  # 4-year institution codes
+            graduation_data['four_year'].append({
+                'cohort': cohort,
+                'statuses': statuses
+            })
+        elif cohort.grtype_code in [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 43, 44]:  # Bachelor's subcohort codes
+            graduation_data['bachelors'].append({
+                'cohort': cohort,
+                'statuses': statuses
+            })
+        else:  # Other degree/certificate-seeking subcohort codes
+            graduation_data['other'].append({
+                'cohort': cohort,
+                'statuses': statuses
+            })
+    
+    return render_template(
+        'institutions/view_graduation_rates.html',
+        institution=institution,
+        graduation_data=graduation_data
+    )

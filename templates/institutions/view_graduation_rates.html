@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Graduation Rates - {{ institution.name }} - KC College Explorer{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/graduation_rates.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+{% endblock %}
+
+{% block header_title %}
+    <i class="fas fa-graduation-cap"></i> Graduation Rates for {{ institution.name }}
+{% endblock %}
+
+{% block content %}
+    <div class="graduation-rates-container">
+        <div class="action-buttons">
+            <a href="{{ url_for('view_institution', id=institution.id) }}" class="btn">
+                <i class="fas fa-arrow-left"></i> Back to Institution
+            </a>
+        </div>
+
+        {% if graduation_data.four_year %}
+        <div class="rates-section">
+            <h3><i class="fas fa-university"></i> 4-Year Institution Rates</h3>
+            {% for item in graduation_data.four_year %}
+                <div class="cohort-group">
+                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                    <table class="rates-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-user-graduate"></i> Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in item.statuses %}
+                            <tr>
+                                <td>{{ status.chrtstat_label }}</td>
+                                <td class="student-count">{{ status.student_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if graduation_data.bachelors %}
+        <div class="rates-section">
+            <h3><i class="fas fa-diploma"></i> Bachelor's Degree Subcohort Rates</h3>
+            {% for item in graduation_data.bachelors %}
+                <div class="cohort-group">
+                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                    <table class="rates-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-user-graduate"></i> Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in item.statuses %}
+                            <tr>
+                                <td>{{ status.chrtstat_label }}</td>
+                                <td class="student-count">{{ status.student_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if graduation_data.other %}
+        <div class="rates-section">
+            <h3><i class="fas fa-certificate"></i> Other Degree/Certificate-Seeking Rates</h3>
+            {% for item in graduation_data.other %}
+                <div class="cohort-group">
+                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                    <table class="rates-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-info-circle"></i> Status</th>
+                                <th><i class="fas fa-user-graduate"></i> Count</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for status in item.statuses %}
+                            <tr>
+                                <td>{{ status.chrtstat_label }}</td>
+                                <td class="student-count">{{ status.student_count }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if not graduation_data.four_year and not graduation_data.bachelors and not graduation_data.other %}
+        <div class="no-data">
+            <i class="fas fa-chart-line"></i>
+            <p>No graduation rate data available for this institution.</p>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %} 
