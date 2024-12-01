@@ -98,23 +98,69 @@
             {% if graduation_data.four_year %}
             <div class="metric-group">
                 <h4><i class="fas fa-university"></i> 4-Year Institution Metrics</h4>
-                {% for item in graduation_data.four_year %}
-                    <div class="cohort-group">
-                        <h5>{{ item.cohort.grtype_label }}</h5>
-                        <div class="metrics-grid">
-                            {% for status in item.statuses %}
-                                <div class="metric-item">
-                                    <span class="metric-label">{{ status.chrtstat_label }}:</span>
-                                    <span class="metric-value">{{ status.student_count }}</span>
-                                    {% if status.chrtstat_code != 2 and item.statuses|selectattr('chrtstat_code', 'equalto', 2)|first %}
-                                        {% set base_count = item.statuses|selectattr('chrtstat_code', 'equalto', 2)|first|attr('student_count') %}
-                                        <span class="metric-rate">({{ "%.1f"|format(status.student_count / base_count * 100) }}%)</span>
+                <div class="cohort-metrics">
+                    {% for item in graduation_data.four_year %}
+                        {% if item.cohort.grtype_code == 2 %}  {# Adjusted cohort #}
+                            <div class="metric-card total">
+                                <i class="fas fa-users"></i>
+                                <span class="metric-value">{{ item.statuses[0].student_count }}</span>
+                                <span class="metric-label">Total Cohort</span>
+                            </div>
+                        {% endif %}
+                        
+                        {% if item.cohort.grtype_code == 3 %}  {# Completers #}
+                            <div class="metric-card completed">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span class="metric-value">{{ item.statuses[0].student_count }}</span>
+                                <span class="metric-label">Completed</span>
+                                {% for other_item in graduation_data.four_year %}
+                                    {% if other_item.cohort.grtype_code == 2 %}
+                                        <span class="metric-rate">({{ "%.1f"|format(item.statuses[0].student_count / other_item.statuses[0].student_count * 100) }}%)</span>
                                     {% endif %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                {% endfor %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if item.cohort.grtype_code == 4 %}  {# Transfer Out #}
+                            <div class="metric-card transferred">
+                                <i class="fas fa-exchange-alt"></i>
+                                <span class="metric-value">{{ item.statuses[0].student_count }}</span>
+                                <span class="metric-label">Transferred Out</span>
+                                {% for other_item in graduation_data.four_year %}
+                                    {% if other_item.cohort.grtype_code == 2 %}
+                                        <span class="metric-rate">({{ "%.1f"|format(item.statuses[0].student_count / other_item.statuses[0].student_count * 100) }}%)</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if item.cohort.grtype_code == 41 %}  {# Still Enrolled #}
+                            <div class="metric-card enrolled">
+                                <i class="fas fa-user-clock"></i>
+                                <span class="metric-value">{{ item.statuses[0].student_count }}</span>
+                                <span class="metric-label">Still Enrolled</span>
+                                {% for other_item in graduation_data.four_year %}
+                                    {% if other_item.cohort.grtype_code == 2 %}
+                                        <span class="metric-rate">({{ "%.1f"|format(item.statuses[0].student_count / other_item.statuses[0].student_count * 100) }}%)</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        
+                        {% if item.cohort.grtype_code == 42 %}  {# No Longer Enrolled #}
+                            <div class="metric-card dropped">
+                                <i class="fas fa-user-times"></i>
+                                <span class="metric-value">{{ item.statuses[0].student_count }}</span>
+                                <span class="metric-label">No Longer Enrolled</span>
+                                {% for other_item in graduation_data.four_year %}
+                                    {% if other_item.cohort.grtype_code == 2 %}
+                                        <span class="metric-rate">({{ "%.1f"|format(item.statuses[0].student_count / other_item.statuses[0].student_count * 100) }}%)</span>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
             {% endif %}
         </div>
