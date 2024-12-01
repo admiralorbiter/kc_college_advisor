@@ -1519,3 +1519,7 @@ def map_view():
     map_html = m._repr_html_()
     
     return render_template('map/map.html', map_html=map_html)
+
+@app.route('/about')
+def about():
+    return render_template('about.html')

@@ -1,0 +1,108 @@
+/* About page specific styles */
+.about-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.about-section {
+    margin-bottom: 60px;
+}
+
+.about-section h1 {
+    font-size: 2.5em;
+    color: #2c3e50;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.about-section h2 {
+    color: #3498db;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+}
+
+.about-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+    font-size: 1.4em;
+}
+
+.about-section p {
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* Mission Section */
+.mission-section {
+    background-color: #f8f9fa;
+    padding: 40px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.mission-content h3 {
+    color: #3498db;
+    font-size: 1.6em;
+    margin-bottom: 20px;
+}
+
+/* Features Grid */
+.features-grid, .values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.feature-card, .value-card {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover, .value-card:hover {
+    transform: translateY(-5px);
+}
+
+/* KC Section */
+.kc-section {
+    background: linear-gradient(rgba(52, 152, 219, 0.1), rgba(52, 152, 219, 0.05));
+    padding: 40px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+/* Data Section */
+.data-section {
+    background-color: #f8f9fa;
+    padding: 40px;
+    border-radius: 8px;
+    margin-top: 60px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .about-container {
+        padding: 20px;
+    }
+
+    .about-section h1 {
+        font-size: 2em;
+    }
+
+    .about-section h2 {
+        font-size: 1.6em;
+    }
+
+    .features-grid, .values-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .mission-section, .kc-section, .data-section {
+        padding: 30px 20px;
+    }
+} 

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='about-page.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="about-container">
+    <!-- Introduction Section -->
+    <section class="about-section">
+        <h1>About KC College Explorer</h1>
+        <div class="about-intro">
+            <h2>Who We Are</h2>
+            <p>KC College Explorer is your one-stop platform for discovering colleges and programs in the Kansas City metro area. Whether you're a student planning your next step, a parent helping guide your child, or an advisor supporting others, our tool makes finding the right college easier than ever.</p>
+        </div>
+    </section>
+
+    <!-- Mission Section -->
+    <section class="about-section mission-section">
+        <h2>Our Mission</h2>
+        <div class="mission-content">
+            <h3>Empowering Students. Strengthening Communities.</h3>
+            <p>Our mission is to connect students with educational opportunities in Kansas City, supporting their academic goals and helping them build successful futures. By providing accessible data and insights, we aim to strengthen our local workforce and community.</p>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="about-section features-section">
+        <h2>What We Offer</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <h3>Comprehensive College Database</h3>
+                <p>Explore detailed information about local colleges, including programs, completion rates, costs, and more, sourced directly from the Integrated Postsecondary Education Data System (IPEDS). This data is provided by the institutions themselves, ensuring accuracy and transparency.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Interactive Tools</h3>
+                <p>Use maps and filters to find institutions that match your interests, whether you're looking for affordability, location, or degree types.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Tailored for KC</h3>
+                <p>Focused on Kansas City's unique education landscape, helping students stay connected to local opportunities.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- KC Focus Section -->
+    <section class="about-section kc-section">
+        <h2>Why Kansas City?</h2>
+        <p>Kansas City is home to a thriving educational ecosystem with opportunities that prepare students for success in local and global industries. From community colleges to specialized programs and four-year institutions, KC offers something for everyone. We're here to help you navigate these options.</p>
+    </section>
+
+    <!-- Vision Section -->
+    <section class="about-section vision-section">
+        <h2>Our Vision for the Future</h2>
+        <p>While we start in Kansas City, our vision is to expand nationwide, helping students across the U.S. find colleges and programs that suit their goals. Education should be accessible, transparent, and tailored to every learner.</p>
+    </section>
+
+    <!-- Values Section -->
+    <section class="about-section values-section">
+        <h2>Our Values</h2>
+        <div class="values-grid">
+            <div class="value-card">
+                <h3>Accessibility</h3>
+                <p>Making college information easy to find and understand.</p>
+            </div>
+            <div class="value-card">
+                <h3>Local Impact</h3>
+                <p>Strengthening Kansas City's education system and workforce.</p>
+            </div>
+            <div class="value-card">
+                <h3>Transparency</h3>
+                <p>Providing unbiased, data-driven insights to empower informed decisions, with reliable data sourced directly from educational institutions through IPEDS.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Accuracy Section -->
+    <section class="about-section data-section">
+        <h2>A Commitment to Data Accuracy</h2>
+        <p>KC College Explorer relies on trusted sources like the Integrated Postsecondary Education Data System (IPEDS), a national data collection program maintained by the U.S. Department of Education. All the information on this platform is submitted by institutions, ensuring it reflects the most up-to-date and accurate data about programs, costs, and outcomes.</p>
+    </section>
+</div>
+{% endblock %}

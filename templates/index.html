@@ -1,6 +1,60 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='landing-page.css') }}">
+{% endblock %}
+
 {% block content %}
-    <h2>Main Content</h2>
-    <p>This is a basic template for your website. You can modify it according to your needs.</p>
+<div class="hero-section">
+    <h1>Explore Colleges in Kansas City – Find Your Path to Success</h1>
+    <p class="hero-subtitle">Discover programs, compare colleges, and plan your future with KC College Explorer.</p>
+    <div class="cta-buttons">
+        <a href="/map" class="btn btn-primary">Start Exploring</a>
+        <a href="/about" class="btn btn-secondary">Learn More</a>
+    </div>
+</div>
+
+<section class="features-section">
+    <h2>Why Use KC College Explorer?</h2>
+    <div class="features-grid">
+        <div class="feature-card">
+            <i class="fas fa-search"></i>
+            <h3>Find the Right College</h3>
+            <p>Search for institutions based on location, programs, and completion rates.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-map-marked-alt"></i>
+            <h3>Plan Your Journey</h3>
+            <p>Access valuable insights into programs, graduation outcomes, and career opportunities.</p>
+        </div>
+        <div class="feature-card">
+            <i class="fas fa-check-circle"></i>
+            <h3>Explore with Confidence</h3>
+            <p>User-friendly tools designed for students, parents, and advisors in Kansas City.</p>
+        </div>
+    </div>
+    <a href="/colleges" class="btn btn-large">Explore KC Colleges Now</a>
+</section>
+
+<section class="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <h3>Search</h3>
+            <p>Filter colleges by program, location, or degree type.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <h3>Compare</h3>
+            <p>View detailed stats like graduation rates and tuition costs.</p>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <h3>Plan</h3>
+            <p>Choose the right fit and start your application process.</p>
+        </div>
+    </div>
+    <a href="/degrees" class="btn btn-large">Start Exploring Today</a>
+</section>
 {% endblock %}
