@@ -62,6 +62,11 @@
                         County <i class="fas fa-sort{{ '-' + sort_icon if sort_by == 'county' else '' }}"></i>
                     </a>
                 </th>
+                <th>
+                    <a href="{{ url_for('colleges', sort='completion_rate', direction=sort_direction) }}" class="sort-link">
+                        Completion Rate {% if sort_by == 'completion_rate' %}<i class="fas fa-sort-{{ sort_icon }}"></i>{% endif %}
+                    </a>
+                </th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -77,6 +82,24 @@
                 <td>{{ institution.city }}</td>
                 <td>{{ institution.state }}</td>
                 <td>{{ institution.county }}</td>
+                <td>
+                    {% if institution.completion_rate is not none %}
+                        <span class="completion-rate 
+                            {% if institution.completion_rate >= 70 %}high
+                            {% elif institution.completion_rate >= 40 %}medium
+                            {% else %}low{% endif %}">
+                            <i class="fas {% if institution.completion_rate >= 70 %}fa-check-circle
+                                        {% elif institution.completion_rate >= 40 %}fa-exclamation-circle
+                                        {% else %}fa-times-circle{% endif %}"></i>
+                            {{ "%.1f"|format(institution.completion_rate) }}%
+                        </span>
+                    {% else %}
+                        <span class="completion-rate na">
+                            <i class="fas fa-question-circle"></i>
+                            N/A
+                        </span>
+                    {% endif %}
+                </td>
                 <td>
                     <a href="{{ url_for('edit_institution', id=institution.id) }}" class="btn-small btn-link">Edit</a>
                     <a href="{{ url_for('delete_institution', id=institution.id) }}" class="btn-small btn-danger">Delete</a>

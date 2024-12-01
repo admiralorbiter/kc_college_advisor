@@ -26,15 +26,16 @@ def colleges():
     # Toggle sort direction
     sort_direction = 'desc' if direction == 'asc' else 'asc'
     
-    # Create the sort expression
-    sort_column = getattr(Institution, sort_by)
-    if direction == 'desc':
-        sort_column = sort_column.desc()
-    
     # Start with base query
     query = Institution.query.filter(Institution.state.in_(['MO', 'KS']))
     
-    # Apply name search if provided
+    # Add eager loading for both graduation cohorts and IPEDS metrics
+    query = query.options(
+        db.joinedload(Institution.graduation_cohorts).joinedload(GraduationCohort.statuses),
+        db.joinedload(Institution.ipeds_graduation_metrics)
+    )
+    
+    # Apply search filters
     if name_search:
         query = query.filter(
             db.or_(
@@ -43,7 +44,6 @@ def colleges():
             )
         )
     
-    # Apply location search if provided
     if location_search:
         query = query.filter(
             db.or_(
@@ -53,8 +53,58 @@ def colleges():
             )
         )
     
-    # Apply sorting and get results
-    institutions = query.order_by(sort_column).all()
+    # Get results based on non-completion rate sorting
+    if sort_by != 'completion_rate':
+        sort_column = getattr(Institution, sort_by)
+        if direction == 'desc':
+            sort_column = sort_column.desc()
+        institutions = query.order_by(sort_column).all()
+    else:
+        institutions = query.all()  # Get all results for manual sorting
+    
+    # Calculate graduation rates for each institution
+    for institution in institutions:
+        # Initialize graduation rates
+        institution.completion_rate = None
+        
+        # First try regular graduation cohorts
+        four_year_cohorts = [c for c in institution.graduation_cohorts if c.grtype_code in [2, 3]]
+        two_year_cohorts = [c for c in institution.graduation_cohorts if c.grtype_code in [29, 30]]
+        
+        if four_year_cohorts:
+            adjusted_cohort = next((c for c in four_year_cohorts if c.grtype_code == 2), None)
+            completers = next((c for c in four_year_cohorts if c.grtype_code == 3), None)
+            
+            if adjusted_cohort and completers and adjusted_cohort.statuses and completers.statuses:
+                total = adjusted_cohort.statuses[0].student_count
+                completed = completers.statuses[0].student_count
+                if total > 0:
+                    institution.completion_rate = (completed / total) * 100
+                    
+        elif two_year_cohorts:
+            adjusted_cohort = next((c for c in two_year_cohorts if c.grtype_code == 29), None)
+            completers = next((c for c in two_year_cohorts if c.grtype_code == 30), None)
+            
+            if adjusted_cohort and completers and adjusted_cohort.statuses and completers.statuses:
+                total = adjusted_cohort.statuses[0].student_count
+                completed = completers.statuses[0].student_count
+                if total > 0:
+                    institution.completion_rate = (completed / total) * 100
+        
+        # If no completion rate found, try IPEDS metrics
+        if institution.completion_rate is None and hasattr(institution, 'ipeds_graduation_metrics'):
+            ipeds = institution.ipeds_graduation_metrics
+            if ipeds and ipeds[0].bachelors_grad_rate_150 is not None:
+                institution.completion_rate = ipeds[0].bachelors_grad_rate_150
+            elif ipeds and ipeds[0].certificate_grad_rate_150 is not None:
+                institution.completion_rate = ipeds[0].certificate_grad_rate_150
+    
+    # Sort by completion rate if selected
+    if sort_by == 'completion_rate':
+        institutions.sort(
+            key=lambda x: (x.completion_rate is None, x.completion_rate or 0),
+            reverse=(direction == 'desc')
+        )
     
     # Determine sort icon
     sort_icon = 'down' if direction == 'desc' else 'up'
