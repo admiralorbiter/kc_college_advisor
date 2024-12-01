@@ -19,88 +19,167 @@
             </a>
         </div>
 
-        {% if graduation_data.four_year %}
+        <!-- IPEDS Graduation Metrics Section -->
+        {% if ipeds_metrics %}
         <div class="rates-section">
-            <h3><i class="fas fa-university"></i> 4-Year Institution Rates</h3>
-            {% for item in graduation_data.four_year %}
-                <div class="cohort-group">
-                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
-                    <table class="rates-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-info-circle"></i> Status</th>
-                                <th><i class="fas fa-user-graduate"></i> Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for status in item.statuses %}
-                            <tr>
-                                <td>{{ status.chrtstat_label }}</td>
-                                <td class="student-count">{{ status.student_count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+            <h3><i class="fas fa-chart-line"></i> IPEDS Graduation Metrics</h3>
+            
+            <!-- Bachelor's Degree Metrics -->
+            {% if ipeds_metrics.bachelors_revised_cohort %}
+            <div class="metric-group">
+                <h4><i class="fas fa-user-graduate"></i> Bachelor's Degree Completion</h4>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Revised Cohort:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_revised_cohort }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 100%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_100pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_100|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 150%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_150pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_150|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 200%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_completed_200pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.bachelors_grad_rate_200|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Still Enrolled:</span>
+                        <span class="metric-value">{{ ipeds_metrics.bachelors_still_enrolled }}</span>
+                    </div>
                 </div>
-            {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Certificate/Less than 4-year Metrics -->
+            {% if ipeds_metrics.certificate_revised_cohort %}
+            <div class="metric-group">
+                <h4><i class="fas fa-certificate"></i> Certificate/Less than 4-year Completion</h4>
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <span class="metric-label">Revised Cohort:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_revised_cohort }}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 100%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_100pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_100|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 150%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_150pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_150|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Completed in 200%:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_completed_200pct }}</span>
+                        <span class="metric-rate">({{ "%.1f"|format(ipeds_metrics.certificate_grad_rate_200|float) }}%)</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Still Enrolled:</span>
+                        <span class="metric-value">{{ ipeds_metrics.certificate_still_enrolled }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
-        {% if graduation_data.bachelors %}
-        <div class="rates-section">
-            <h3><i class="fas fa-diploma"></i> Bachelor's Degree Subcohort Rates</h3>
-            {% for item in graduation_data.bachelors %}
-                <div class="cohort-group">
-                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
-                    <table class="rates-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-info-circle"></i> Status</th>
-                                <th><i class="fas fa-user-graduate"></i> Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for status in item.statuses %}
-                            <tr>
-                                <td>{{ status.chrtstat_label }}</td>
-                                <td class="student-count">{{ status.student_count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endfor %}
+        <!-- Legacy Graduation Rates Section -->
+        {% if graduation_data.four_year or graduation_data.bachelors or graduation_data.other %}
+        <div class="rates-section legacy-rates">
+            <h3><i class="fas fa-history"></i> Historical Graduation Rates</h3>
+            
+            <!-- Existing graduation_data sections remain unchanged -->
+            {% if graduation_data.four_year %}
+            <div class="metric-group">
+                <h4><i class="fas fa-university"></i> 4-Year Institution Rates</h4>
+                {% for item in graduation_data.four_year %}
+                    <div class="cohort-group">
+                        <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                        <table class="rates-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                    <th><i class="fas fa-user-graduate"></i> Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in item.statuses %}
+                                <tr>
+                                    <td>{{ status.chrtstat_label }}</td>
+                                    <td class="student-count">{{ status.student_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if graduation_data.bachelors %}
+            <div class="metric-group">
+                <h4><i class="fas fa-diploma"></i> Bachelor's Degree Subcohort Rates</h4>
+                {% for item in graduation_data.bachelors %}
+                    <div class="cohort-group">
+                        <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                        <table class="rates-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                    <th><i class="fas fa-user-graduate"></i> Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in item.statuses %}
+                                <tr>
+                                    <td>{{ status.chrtstat_label }}</td>
+                                    <td class="student-count">{{ status.student_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if graduation_data.other %}
+            <div class="metric-group">
+                <h4><i class="fas fa-certificate"></i> Other Degree/Certificate-Seeking Rates</h4>
+                {% for item in graduation_data.other %}
+                    <div class="cohort-group">
+                        <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
+                        <table class="rates-table">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-info-circle"></i> Status</th>
+                                    <th><i class="fas fa-user-graduate"></i> Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in item.statuses %}
+                                <tr>
+                                    <td>{{ status.chrtstat_label }}</td>
+                                    <td class="student-count">{{ status.student_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
         </div>
         {% endif %}
 
-        {% if graduation_data.other %}
-        <div class="rates-section">
-            <h3><i class="fas fa-certificate"></i> Other Degree/Certificate-Seeking Rates</h3>
-            {% for item in graduation_data.other %}
-                <div class="cohort-group">
-                    <h4><i class="fas fa-users"></i> {{ item.cohort.grtype_label }}</h4>
-                    <table class="rates-table">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-info-circle"></i> Status</th>
-                                <th><i class="fas fa-user-graduate"></i> Count</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for status in item.statuses %}
-                            <tr>
-                                <td>{{ status.chrtstat_label }}</td>
-                                <td class="student-count">{{ status.student_count }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        {% if not graduation_data.four_year and not graduation_data.bachelors and not graduation_data.other %}
+        {% if not ipeds_metrics and not graduation_data.four_year and not graduation_data.bachelors and not graduation_data.other %}
         <div class="no-data">
             <i class="fas fa-chart-line"></i>
             <p>No graduation rate data available for this institution.</p>

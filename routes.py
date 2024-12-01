@@ -1,3 +1,4 @@
+import re
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from app import app, db
 import pandas as pd
@@ -6,7 +7,7 @@ import io
 import os
 from models.classification_codes import CLASSIFICATION_CODES
 from models.enums import *
-from models.graduation import GraduationCohort, GraduationStatus
+from models.graduation import GraduationCohort, GraduationStatus, IPEDSGraduationMetrics
 from models.institution import Institution
 from models.institutional_attributes import Institutional_Attributes
 from models.completitions import Completitions
@@ -161,22 +162,15 @@ def import_institutions():
     if request.method == 'POST':
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file uploaded'})
-        
+            
         file = request.files['file']
-        import_type = request.form.get('import_type', 'hd2023')
+        import_type = request.form.get('import_type')
         
         if file.filename == '':
             return jsonify({'success': False, 'error': 'No file selected'})
-        
+
         if file and file.filename.endswith('.csv'):
             try:
-                # Extract year from file name using regex to find 4 consecutive digits
-                import re
-                year_match = re.search(r'\d{4}', file.filename)
-                if not year_match:
-                    return jsonify({'success': False, 'error': 'Could not extract year from filename'})
-                year = int(year_match.group())
-                
                 # Save the uploaded file temporarily
                 temp_path = 'temp_upload.csv'
                 file.save(temp_path)
@@ -187,12 +181,20 @@ def import_institutions():
                 # Delete the temporary file
                 os.remove(temp_path)
 
-                if import_type == 'hd2023':
+                # Process based on import type
+                if import_type == 'c2023_a':
+                    # Only extract year for completion data
+                    year_match = re.search(r'\d{4}', file.filename)
+                    if not year_match:
+                        return jsonify({'success': False, 'error': 'Could not extract year from filename'})
+                    year = int(year_match.group())
+                    result = import_c2023_a_data(df, year)
+                elif import_type == 'gr200':
+                    result = import_gr200_data(df)
+                elif import_type == 'hd2023':
                     result = import_hd2023_data(df)
                 elif import_type == 'ic2023':
                     result = import_ic2023_data(df)
-                elif import_type == 'c2023_a':
-                    result = import_c2023_a_data(df, year)
                 elif import_type == 'gr2022':
                     result = import_gr2022_data(df)
                 else:
@@ -1250,14 +1252,15 @@ def import_gr2022_data(df):
 def view_graduation_rates(id):
     institution = Institution.query.get_or_404(id)
     
-    # Get all graduation cohorts for this institution
+    # Get IPEDS metrics
+    ipeds_metrics = IPEDSGraduationMetrics.query.filter_by(
+        institution_id=institution.id
+    ).first()
+    
+    # Get legacy graduation cohorts
     cohorts = GraduationCohort.query.filter_by(
         institution_id=int(institution.institution_id)
     ).all()
-    
-    # Add debug logging
-    print(f"Looking for graduation rates for institution_id {institution.institution_id}")
-    print(f"Found {len(cohorts)} cohorts")
     
     # Organize the data by cohort type
     graduation_data = {
@@ -1269,7 +1272,6 @@ def view_graduation_rates(id):
     for cohort in cohorts:
         # Get all statuses for this cohort
         statuses = GraduationStatus.query.filter_by(cohort_id=cohort.id).all()
-        print(f"Cohort {cohort.id} has {len(statuses)} status records")
         
         # Determine which category this cohort belongs to
         if cohort.grtype_code in [2, 3, 4, 41, 42]:  # 4-year institution codes
@@ -1291,5 +1293,90 @@ def view_graduation_rates(id):
     return render_template(
         'institutions/view_graduation_rates.html',
         institution=institution,
-        graduation_data=graduation_data
+        graduation_data=graduation_data,
+        ipeds_metrics=ipeds_metrics
     )
+
+def import_gr200_data(df):
+    try:
+        success_count = 0
+        error_count = 0
+
+        # Process each row in the dataframe
+        for _, row in df.iterrows():
+            try:
+                # Find the institution by UNITID
+                institution = Institution.query.filter_by(institution_id=str(row['UNITID'])).first()
+                if not institution:
+                    error_count += 1
+                    print(f"Institution not found: {row['UNITID']}")
+                    continue
+
+                # Create or update IPEDS metrics
+                metrics = IPEDSGraduationMetrics.query.filter_by(
+                    institution_id=institution.id
+                ).first() or IPEDSGraduationMetrics(institution_id=institution.id)
+
+                def safe_convert(value, default=None):
+                    if pd.isna(value) or value == '' or value == 'R':  # Handle 'R' values
+                        return default
+                    try:
+                        return int(float(value)) if isinstance(value, (str, int, float)) else default
+                    except (ValueError, TypeError):
+                        return default
+
+                def safe_convert_float(value, default=None):
+                    if pd.isna(value) or value == '' or value == 'R':  # Handle 'R' values
+                        return default
+                    try:
+                        return float(value) if isinstance(value, (str, int, float)) else default
+                    except (ValueError, TypeError):
+                        return default
+
+                # Update all fields from the CSV
+                metrics.bachelors_revised_cohort = safe_convert(row.get('BAREVCT'))
+                metrics.bachelors_completed_100pct = safe_convert(row.get('BANC100'))
+                metrics.bachelors_completed_150pct = safe_convert(row.get('BANC150'))
+                metrics.bachelors_completed_200pct = safe_convert(row.get('BANC200'))
+                metrics.bachelors_still_enrolled = safe_convert(row.get('BASTEND'))
+                
+                metrics.bachelors_grad_rate_100 = safe_convert_float(row.get('BAGR100'))
+                metrics.bachelors_grad_rate_150 = safe_convert_float(row.get('BAGR150'))
+                metrics.bachelors_grad_rate_200 = safe_convert_float(row.get('BAGR200'))
+                
+                metrics.certificate_revised_cohort = safe_convert(row.get('L4REVCT'))
+                metrics.certificate_completed_100pct = safe_convert(row.get('L4NC100'))
+                metrics.certificate_completed_150pct = safe_convert(row.get('L4NC150'))
+                metrics.certificate_completed_200pct = safe_convert(row.get('L4NC200'))
+                metrics.certificate_still_enrolled = safe_convert(row.get('L4STEND'))
+                
+                metrics.certificate_grad_rate_100 = safe_convert_float(row.get('L4GR100'))
+                metrics.certificate_grad_rate_150 = safe_convert_float(row.get('L4GR150'))
+                metrics.certificate_grad_rate_200 = safe_convert_float(row.get('L4GR200'))
+
+                # Add or update the record
+                if metrics.id is None:
+                    db.session.add(metrics)
+                
+                success_count += 1
+
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {str(e)}")
+                continue
+
+        # Commit all successful additions
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': f'Successfully imported {success_count} IPEDS graduation metrics. {error_count} errors.'
+        }
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"Top level error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Error importing IPEDS graduation metrics: {str(e)}'
+        }
