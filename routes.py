@@ -169,6 +169,13 @@ def import_institutions():
         
         if file and file.filename.endswith('.csv'):
             try:
+                # Extract year from file name using regex to find 4 consecutive digits
+                import re
+                year_match = re.search(r'\d{4}', file.filename)
+                if not year_match:
+                    return jsonify({'success': False, 'error': 'Could not extract year from filename'})
+                year = int(year_match.group())
+                
                 # Save the uploaded file temporarily
                 temp_path = 'temp_upload.csv'
                 file.save(temp_path)
@@ -184,7 +191,7 @@ def import_institutions():
                 elif import_type == 'ic2023':
                     result = import_ic2023_data(df)
                 elif import_type == 'c2023_a':
-                    result = import_c2023_a_data(df)
+                    result = import_c2023_a_data(df, year)
                 else:
                     return jsonify({'success': False, 'error': 'Invalid import type'})
 
@@ -702,7 +709,7 @@ def view_institution_attributes(id):
                          institution=institution,
                          attributes=attributes)
 
-def import_c2023_a_data(df):
+def import_c2023_a_data(df, year):
     try:
         # Map the columns to our model fields
         column_mapping = {
@@ -775,14 +782,15 @@ def import_c2023_a_data(df):
                     program_classification=program_classification,
                     first_major=row['first_major'],
                     award_level_code=map_award_level(row['award_level_code']),
-                    total_completions=row['total_completions']
+                    total_completions=row['total_completions'],
+                    year=year
                 )
                 
                 db.session.add(completion)
                 success_count += 1
                 
-                # Report progress every 500 successful imports
-                if success_count % 5000 == 0:
+                # Report progress every 10000 successful imports
+                if success_count % 10000 == 0:
                     print(f"Successfully processed {success_count} records...")
                 
             except Exception as e:
@@ -898,6 +906,7 @@ def view_degrees():
     search = request.args.get('search', '').strip().lower()
     state_filter = request.args.get('state', '')
     award_filter = request.args.get('award_level', '')
+    year_filter = request.args.get('year', '2023')  # Default to 2023
     sort_by = request.args.get('sort', 'program_classification')
     direction = request.args.get('direction', 'asc')
     page = request.args.get('page', 1, type=int)
@@ -906,7 +915,8 @@ def view_degrees():
     # Start with base query
     query = Completitions.query.join(Institution).filter(
         Institution.state.in_(['KS', 'MO']),
-        Completitions.first_major == '1'
+        Completitions.first_major == '1',
+        Completitions.year == int(year_filter)  # Add year filter
     )
     
     # Apply filters
@@ -979,6 +989,7 @@ def view_degrees_summary():
     search = request.args.get('search', '').strip().lower()
     state_filter = request.args.get('state', '')
     award_filter = request.args.get('award_level', '')
+    year_filter = request.args.get('year', '2023')  # Default to 2023
     sort_by = request.args.get('sort', 'program_classification')
     direction = request.args.get('direction', 'asc')
     page = request.args.get('page', 1, type=int)
@@ -987,7 +998,8 @@ def view_degrees_summary():
     # Start with base query for filtered totals
     filtered_query = Completitions.query.join(Institution).filter(
         Institution.state.in_(['KS', 'MO']),
-        Completitions.first_major == '1'
+        Completitions.first_major == '1',
+        Completitions.year == int(year_filter)  # Add year filter
     )
     
     # Apply filters to the totals query
@@ -1027,7 +1039,8 @@ def view_degrees_summary():
         db.func.sum(Completitions.total_completions).label('total_completions')
     ).join(Institution).filter(
         Institution.state.in_(['KS', 'MO']),
-        Completitions.first_major == '1'
+        Completitions.first_major == '1',
+        Completitions.year == int(year_filter)  # Add year filter
     ).group_by(
         Completitions.program_classification,
         Completitions.award_level_code

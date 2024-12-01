@@ -16,6 +16,14 @@
                            value="{{ request.args.get('search', '') }}">
                 </div>
                 <div class="search-group">
+                    <select name="year">
+                        <option value="2023" {% if request.args.get('year', '2023') == '2023' %}selected{% endif %}>2023</option>
+                        <option value="2022" {% if request.args.get('year') == '2022' %}selected{% endif %}>2022</option>
+                        <option value="2021" {% if request.args.get('year') == '2021' %}selected{% endif %}>2021</option>
+                        <option value="2020" {% if request.args.get('year') == '2020' %}selected{% endif %}>2020</option>
+                    </select>
+                </div>
+                <div class="search-group">
                     <select name="award_level">
                         <option value="">All Award Levels</option>
                         <option value="20" {% if request.args.get('award_level') == '20' %}selected{% endif %}>Certificate (< 1 year)</option>
@@ -47,8 +55,18 @@
         </div>
 
         <div class="view-toggle">
-            <a href="{{ url_for('view_degrees') }}" class="btn btn-primary">View by Institution</a>
-            <a href="{{ url_for('view_degrees_summary') }}" class="btn btn-primary active">View Program Summary</a>
+            <a href="{{ url_for('view_degrees', 
+                        search=request.args.get('search', ''),
+                        state=request.args.get('state', ''),
+                        award_level=request.args.get('award_level', ''),
+                        year=request.args.get('year', '2023')) }}" 
+               class="btn btn-primary">View by Institution</a>
+            <a href="{{ url_for('view_degrees_summary', 
+                        search=request.args.get('search', ''),
+                        state=request.args.get('state', ''),
+                        award_level=request.args.get('award_level', ''),
+                        year=request.args.get('year', '2023')) }}" 
+               class="btn btn-primary active">View Program Summary</a>
         </div>
 
         <!-- Degree Summary -->
@@ -103,12 +121,13 @@
                     <tr>
                         <th>
                             <a href="{{ url_for('view_degrees_summary', 
-                                             sort='program_classification',
-                                             direction='desc' if sort_by == 'program_classification' and sort_direction == 'asc' else 'asc',
-                                             search=request.args.get('search', ''),
-                                             state=request.args.get('state', ''),
-                                             award_level=request.args.get('award_level', ''),
-                                             page=page) }}"
+                                         sort='program_classification',
+                                         direction='desc' if sort_by == 'program_classification' and sort_direction == 'asc' else 'asc',
+                                         search=request.args.get('search', ''),
+                                         state=request.args.get('state', ''),
+                                         award_level=request.args.get('award_level', ''),
+                                         year=request.args.get('year', '2023'),
+                                         page=page) }}"
                                 class="sort-link">
                                 Program
                                 {% if sort_by == 'program_classification' %}
@@ -119,12 +138,13 @@
                             </a>
                         </th>
                         <th>
-                            <a href="{{ url_for('view_degrees_summary', 
+                            <a href="{{ url_for('view_degrees', 
                                              sort='award_level',
                                              direction='desc' if sort_by == 'award_level' and sort_direction == 'asc' else 'asc',
                                              search=request.args.get('search', ''),
                                              state=request.args.get('state', ''),
                                              award_level=request.args.get('award_level', ''),
+                                             year=request.args.get('year', '2023'),
                                              page=page) }}"
                                 class="sort-link">
                                 Award Level
@@ -136,12 +156,13 @@
                             </a>
                         </th>
                         <th>
-                            <a href="{{ url_for('view_degrees_summary', 
+                            <a href="{{ url_for('view_degrees', 
                                              sort='total_completions',
                                              direction='desc' if sort_by == 'total_completions' and sort_direction == 'asc' else 'asc',
                                              search=request.args.get('search', ''),
                                              state=request.args.get('state', ''),
                                              award_level=request.args.get('award_level', ''),
+                                             year=request.args.get('year', '2023'),
                                              page=page) }}"
                                 class="sort-link">
                                 Total Completions
@@ -190,12 +211,14 @@
                         {% if page_num == programs.page %}
                             <span class="current-page">{{ page_num }}</span>
                         {% else %}
-                            <a href="{{ url_for('view_degrees_summary', page=page_num, 
-                                               search=request.args.get('search', ''),
-                                               state=request.args.get('state', ''),
-                                               award_level=request.args.get('award_level', ''),
-                                               sort=sort_by,
-                                               direction=sort_direction) }}">
+                            <a href="{{ url_for('view_degrees_summary', 
+                                    page=page_num,
+                                    search=request.args.get('search', ''),
+                                    state=request.args.get('state', ''),
+                                    award_level=request.args.get('award_level', ''),
+                                    year=request.args.get('year', '2023'),
+                                    sort=sort_by,
+                                    direction=sort_direction) }}">
                                 {{ page_num }}
                             </a>
                         {% endif %}
