@@ -3,3 +3,4 @@ flask-sqlalchemy
 pandas
 folium
 python-dotenv
+gunicorn
