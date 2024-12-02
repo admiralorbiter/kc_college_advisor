@@ -166,3 +166,47 @@ class AwardLevel(IntEnum):
     DOCTORATE_RESEARCH = 17            # Doctor's degree - research/scholarship
     DOCTORATE_PROFESSIONAL = 18        # Doctor's degree - professional practice
     DOCTORATE_OTHER = 19               # Doctor's degree - other
+
+class EnrollmentType(IntEnum):
+    # All Students Categories
+    ALL_STUDENTS_TOTAL = 1
+    ALL_STUDENTS_UNDERGRAD = 2
+    ALL_STUDENTS_UNDERGRAD_DEGREE_SEEKING = 3
+    ALL_STUDENTS_UNDERGRAD_DEGREE_SEEKING_FIRST_TIME = 4
+    ALL_STUDENTS_UNDERGRAD_OTHER = 5  # Added: Other first-year undergraduates
+    ALL_STUDENTS_UNDERGRAD_DEGREE_SEEKING_TRANSFER = 19
+    ALL_STUDENTS_UNDERGRAD_DEGREE_SEEKING_CONTINUING = 20
+    ALL_STUDENTS_UNDERGRAD_NON_DEGREE = 11
+    ALL_STUDENTS_GRADUATE = 12
+
+    # Full-time Students
+    FULL_TIME_TOTAL = 21
+    FULL_TIME_UNDERGRAD = 22
+    FULL_TIME_UNDERGRAD_DEGREE_SEEKING = 23
+    FULL_TIME_UNDERGRAD_DEGREE_SEEKING_FIRST_TIME = 24
+    FULL_TIME_UNDERGRAD_OTHER = 25  # Added: Other full-time first-year undergraduates
+    FULL_TIME_UNDERGRAD_DEGREE_SEEKING_TRANSFER = 39
+    FULL_TIME_UNDERGRAD_DEGREE_SEEKING_CONTINUING = 40
+    FULL_TIME_UNDERGRAD_NON_DEGREE = 31
+    FULL_TIME_GRADUATE = 32
+
+    # Part-time Students
+    PART_TIME_TOTAL = 41
+    PART_TIME_UNDERGRAD = 42
+    PART_TIME_UNDERGRAD_DEGREE_SEEKING = 43
+    PART_TIME_UNDERGRAD_DEGREE_SEEKING_FIRST_TIME = 44
+    PART_TIME_UNDERGRAD_OTHER = 45  # Added: Other part-time first-year undergraduates
+    PART_TIME_UNDERGRAD_DEGREE_SEEKING_TRANSFER = 59
+    PART_TIME_UNDERGRAD_DEGREE_SEEKING_CONTINUING = 60
+    PART_TIME_UNDERGRAD_NON_DEGREE = 51
+    PART_TIME_GRADUATE = 52
+
+class StudyLevel(IntEnum):
+    NOT_APPLICABLE = -2
+    UNDERGRADUATE = 1
+    GRADUATE = 3
+    GENERATED_TOTAL = 999
+
+class SurveyStudyLevel(IntEnum):
+    UNDERGRADUATE = 1  # Students in 4/5-year bachelor's, associate's, or vocational programs
+    GRADUATE = 3      # Students with bachelor's degree taking postbaccalaureate courses

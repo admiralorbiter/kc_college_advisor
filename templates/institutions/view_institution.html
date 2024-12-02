@@ -70,7 +70,63 @@
                 {% endif %}
             </p>
         </div>
-
+        <div class="detail-group enrollment-summary">
+            <h3><i class="fas fa-users"></i> Enrollment Summary</h3>
+            <div class="enrollment-grid">
+                <!-- Total Students -->
+                <div class="enrollment-card total">
+                    <h4>Total Enrollment</h4>
+                    <div class="enrollment-numbers">
+                        <div class="number-block">
+                            <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.ALL_STUDENTS_TOTAL)|map(attribute='total_enrollment')|sum }}</span>
+                            <span class="label">Students</span>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Undergraduate -->
+                <div class="enrollment-card undergraduate">
+                    <h4>Undergraduate</h4>
+                    <div class="enrollment-numbers">
+                        <div class="number-block">
+                            <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.ALL_STUDENTS_UNDERGRAD)|map(attribute='total_enrollment')|sum }}</span>
+                            <span class="label">Total</span>
+                        </div>
+                        <div class="enrollment-split">
+                            <div class="split-item">
+                                <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.FULL_TIME_UNDERGRAD)|map(attribute='total_enrollment')|sum }}</span>
+                                <span class="label">Full-time</span>
+                            </div>
+                            <div class="split-item">
+                                <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.PART_TIME_UNDERGRAD)|map(attribute='total_enrollment')|sum }}</span>
+                                <span class="label">Part-time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        
+                <!-- Graduate -->
+                <div class="enrollment-card graduate">
+                    <h4>Graduate</h4>
+                    <div class="enrollment-numbers">
+                        <div class="number-block">
+                            <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.ALL_STUDENTS_GRADUATE)|map(attribute='total_enrollment')|sum }}</span>
+                            <span class="label">Total</span>
+                        </div>
+                        <div class="enrollment-split">
+                            <div class="split-item">
+                                <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.FULL_TIME_GRADUATE)|map(attribute='total_enrollment')|sum }}</span>
+                                <span class="label">Full-time</span>
+                            </div>
+                            <div class="split-item">
+                                <span class="number">{{ enrollments|selectattr('enrollment_type', 'eq', EnrollmentType.PART_TIME_GRADUATE)|map(attribute='total_enrollment')|sum }}</span>
+                                <span class="label">Part-time</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="detail-group">
             <h3>Location</h3>
             <p><strong>Address:</strong> {{ institution.address or 'N/A' }}</p>

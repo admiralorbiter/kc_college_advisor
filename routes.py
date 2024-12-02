@@ -6,6 +6,7 @@ import csv
 import io
 import os
 from models.classification_codes import CLASSIFICATION_CODES
+from models.enrollment import Enrollment
 from models.enums import *
 from models.graduation import GraduationCohort, GraduationStatus, IPEDSGraduationMetrics
 from models.institution import Institution
@@ -208,59 +209,55 @@ def edit_institution(id):
     
     return render_template('institutions/edit_institution.html', institution=institution)
 
-@app.route('/institutions/import', methods=['GET', 'POST'])
-def import_institutions():
-    if request.method == 'POST':
-        if 'file' not in request.files:
-            return jsonify({'success': False, 'error': 'No file uploaded'})
-            
-        file = request.files['file']
-        import_type = request.form.get('import_type')
-        
-        if file.filename == '':
-            return jsonify({'success': False, 'error': 'No file selected'})
-
-        if file and file.filename.endswith('.csv'):
-            try:
-                # Save the uploaded file temporarily
-                temp_path = 'temp_upload.csv'
-                file.save(temp_path)
-                
-                # Read the CSV file
-                df = pd.read_csv(temp_path, encoding_errors='replace')
-                
-                # Delete the temporary file
-                os.remove(temp_path)
-
-                # Process based on import type
-                if import_type == 'c2023_a':
-                    # Only extract year for completion data
-                    year_match = re.search(r'\d{4}', file.filename)
-                    if not year_match:
-                        return jsonify({'success': False, 'error': 'Could not extract year from filename'})
-                    year = int(year_match.group())
-                    result = import_c2023_a_data(df, year)
-                elif import_type == 'gr200':
-                    result = import_gr200_data(df)
-                elif import_type == 'hd2023':
-                    result = import_hd2023_data(df)
-                elif import_type == 'ic2023':
-                    result = import_ic2023_data(df)
-                elif import_type == 'gr2022':
-                    result = import_gr2022_data(df)
-                else:
-                    return jsonify({'success': False, 'error': 'Invalid import type'})
-
-                return jsonify(result)
-                
-            except Exception as e:
-                return jsonify({
-                    'success': False,
-                    'error': f'Error processing file: {str(e)}'
-                })
-    
-    # GET request - show the upload form
+@app.route('/import', methods=['GET'])
+def import_institutions_page():
     return render_template('institutions/import_institutions.html')
+
+@app.route('/institutions/import', methods=['POST'])
+def import_institutions():
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file uploaded'})
+    
+    file = request.files['file']
+    import_type = request.form.get('import_type', '')
+    
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No file selected'})
+    
+    if not file.filename.endswith('.csv'):
+        return jsonify({'success': False, 'error': 'Please upload a CSV file'})
+    
+    try:
+        # Read the CSV file
+        df = pd.read_csv(file)
+        
+        # Extract year from import_type (e.g., "effy2022_a" -> 2022)
+        year_match = re.search(r'\d{4}', import_type)
+        year = int(year_match.group(0)) if year_match else None
+        
+        # Call appropriate import function based on import type
+        if import_type.startswith('hd'):
+            result = import_hd2023_data(df)
+        elif import_type.startswith('ic'):
+            result = import_ic2023_data(df)
+        elif import_type.startswith('c'):
+            result = import_c2023_a_data(df)
+        elif import_type == 'gr2022':
+            result = import_gr2022_data(df)
+        elif import_type == 'gr200':
+            result = import_gr200_data(df)
+        elif import_type.startswith('effy'):
+            if not year:
+                return jsonify({'success': False, 'error': 'Could not determine year from filename'})
+            result = import_effy_data(df, year)
+        else:
+            return jsonify({'success': False, 'error': 'Invalid import type'})
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error during import: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 # General clean_enum_value function for numeric enums
 def clean_enum_value(value, enum_class):
@@ -746,7 +743,12 @@ def import_ic2023_data(df):
 @app.route('/institutions/view/<int:id>')
 def view_institution(id):
     institution = Institution.query.get_or_404(id)
-    return render_template('institutions/view_institution.html', institution=institution)
+    enrollments = Enrollment.query.filter_by(institution_id=institution.institution_id).all()
+    
+    return render_template('institutions/view_institution.html',
+                         institution=institution,
+                         enrollments=enrollments,
+                         EnrollmentType=EnrollmentType)  # Pass the enum to the template
 
 @app.route('/institutions/<int:id>/attributes')
 def view_institution_attributes(id):
@@ -1525,3 +1527,105 @@ def map_view():
 @app.route('/about')
 def about():
     return render_template('about.html')
+
+def import_effy_data(df, year):
+    try:
+        # Map the columns to our model fields
+        column_mapping = {
+            'UNITID': 'institution_id',
+            'EFFYALEV': 'enrollment_type',
+            'LSTUDY': 'study_level',
+            'EFYTOTLT': 'total_enrollment'  # Total enrollment count
+        }
+
+        # Rename columns according to our mapping
+        df = df[column_mapping.keys()]
+        df = df.rename(columns=column_mapping)
+        
+        # Convert UNITID to string
+        df['institution_id'] = df['institution_id'].astype(str)
+        
+        success_count = 0
+        error_count = 0
+
+        # Clean enrollment counts
+        def clean_enrollment(x):
+            if pd.isna(x) or x == 'R':  # Handle 'R' (restricted) values
+                return None
+            try:
+                return int(float(x))
+            except (ValueError, TypeError):
+                return None
+
+        df['total_enrollment'] = df['total_enrollment'].apply(clean_enrollment)
+
+        # Process each row in the dataframe
+        for _, row in df.iterrows():
+            try:
+                # Find the institution
+                institution = Institution.query.filter_by(institution_id=row['institution_id']).first()
+                if not institution:
+                    error_count += 1
+                    print(f"Institution not found: {row['institution_id']}")
+                    continue
+
+                # Skip if enrollment count is None
+                if row['total_enrollment'] is None:
+                    error_count += 1
+                    continue
+
+                # Map enrollment type code to enum
+                try:
+                    enrollment_type = EnrollmentType(int(row['enrollment_type']))
+                except (ValueError, TypeError):
+                    error_count += 1
+                    print(f"Invalid enrollment type: {row['enrollment_type']}")
+                    continue
+
+                # Map study level code to enum
+                try:
+                    study_level = StudyLevel(int(row['study_level']))
+                    # Map to survey study level based on study level
+                    survey_study_level = SurveyStudyLevel.UNDERGRADUATE if study_level == StudyLevel.UNDERGRADUATE else SurveyStudyLevel.GRADUATE
+                except (ValueError, TypeError):
+                    error_count += 1
+                    print(f"Invalid study level: {row['study_level']}")
+                    continue
+
+                # Create enrollment record
+                enrollment = Enrollment(
+                    institution_id=row['institution_id'],
+                    year=year,
+                    enrollment_type=enrollment_type,
+                    study_level=study_level,
+                    survey_study_level=survey_study_level,
+                    total_enrollment=row['total_enrollment']
+                )
+                
+                db.session.add(enrollment)
+                success_count += 1
+                
+                # Report progress every 1000 successful imports
+                if success_count % 1000 == 0:
+                    print(f"Successfully processed {success_count} records...")
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error processing row: {str(e)}")
+                print(f"Row data: {row}")
+                continue
+
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'message': f'Successfully imported {success_count} enrollment records. {error_count} errors.'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Top level error: {str(e)}")
+        return {
+            'success': False,
+            'error': f'Error importing enrollment data: {str(e)}'
+        }
