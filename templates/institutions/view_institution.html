@@ -26,6 +26,7 @@
 
         <div class="detail-group">
             <h3>Basic Information</h3>
+            <p>{{ institution.alias }}</p>
             <div class="institution-badges">
                 <span class="badge badge-four-year">4-Year Institution</span>
                 <span class="badge badge-public">Public</span>
@@ -36,7 +37,6 @@
             
             <div class="basic-info-grid">
                 <p><strong>Institution ID:</strong> {{ institution.institution_id }}</p>
-                <p><strong>Alias:</strong> {{ institution.alias or 'N/A' }}</p>
             </div>
         </div>
         <div class="detail-group enrollment-summary">
