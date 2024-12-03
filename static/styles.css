@@ -74,22 +74,58 @@ footer {
 
 /* Button styles */
 .action-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
     margin-bottom: 20px;
 }
 
 .btn {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background-color: #3498db;
     color: white;
-    padding: 10px 20px;
-    border-radius: 4px;
+    padding: 10px 16px;
+    border-radius: 6px;
     text-decoration: none;
-    transition: background-color 0.3s ease;
+    transition: all 0.2s ease;
+    border: none;
+    font-size: 0.95em;
+    font-weight: 500;
+    white-space: nowrap;
 }
 
 .btn:hover {
     background-color: #2980b9;
     color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.btn i {
+    font-size: 1.1em;
+}
+
+.btn-small {
+    padding: 6px 12px;
+    font-size: 0.85em;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
 }
 
 .institutions-table {
@@ -1028,4 +1064,22 @@ footer {
 
 .enrollment-card.graduate {
     border-left: 4px solid #e74c3c;
+}
+
+/* Basic Information section styles */
+.institution-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.basic-info-grid {
+    display: grid;
+    gap: 10px;
+}
+
+.badge-title-iv {
+    background-color: #28a745;
+    color: white;
 }

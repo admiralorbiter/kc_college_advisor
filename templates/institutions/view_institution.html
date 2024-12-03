@@ -26,49 +26,18 @@
 
         <div class="detail-group">
             <h3>Basic Information</h3>
-            <p><strong>Institution ID:</strong> {{ institution.institution_id }}</p>
-            <p><strong>Alias:</strong> {{ institution.alias or 'N/A' }}</p>
-            <p>
-                <strong>Institution Type:</strong>
-                {% if institution.level %}
-                    {% if institution.level.value == 1 %}
-                        <span class="badge badge-four-year">4-Year Institution</span>
-                    {% elif institution.level.value == 2 %}
-                        <span class="badge badge-two-year">2-Year Institution</span>
-                    {% elif institution.level.value == 3 %}
-                        <span class="badge badge-less-than-two-year">Less than 2-Year</span>
-                    {% else %}
-                        <span class="badge badge-unknown">Unknown Level</span>
-                    {% endif %}
-                {% else %}
-                    <span class="badge badge-unknown">Unknown Level</span>
+            <div class="institution-badges">
+                <span class="badge badge-four-year">4-Year Institution</span>
+                <span class="badge badge-public">Public</span>
+                {% if institution.title_iv_eligible %}
+                    <span class="badge badge-title-iv">Title IV Eligible</span>
                 {% endif %}
-            </p>
-            <p>
-                <strong>Control:</strong>
-                {% if institution.control %}
-                    {% if institution.control.value == 1 %}
-                        <span class="badge badge-public">Public</span>
-                    {% elif institution.control.value == 2 %}
-                        <span class="badge badge-private-nonprofit">Private Non-Profit</span>
-                    {% elif institution.control.value == 3 %}
-                        <span class="badge badge-private-forprofit">Private For-Profit</span>
-                    {% else %}
-                        <span class="badge badge-unknown">Unknown Control</span>
-                    {% endif %}
-                {% else %}
-                    <span class="badge badge-unknown">Unknown Control</span>
-                {% endif %}
-            </p>
-            <p><strong>Title IV Eligible:</strong> 
-                {% if institution.title_iv_eligible == True %}
-                    <i class="fas fa-check-circle status-icon success"></i> Yes
-                {% elif institution.title_iv_eligible == False %}
-                    <i class="fas fa-times-circle status-icon error"></i> No
-                {% else %}
-                    <i class="fas fa-question-circle status-icon unknown"></i> Unknown
-                {% endif %}
-            </p>
+            </div>
+            
+            <div class="basic-info-grid">
+                <p><strong>Institution ID:</strong> {{ institution.institution_id }}</p>
+                <p><strong>Alias:</strong> {{ institution.alias or 'N/A' }}</p>
+            </div>
         </div>
         <div class="detail-group enrollment-summary">
             <h3><i class="fas fa-users"></i> Enrollment Summary</h3>
