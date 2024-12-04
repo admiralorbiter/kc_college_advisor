@@ -13,6 +13,7 @@ from models.institution import Institution
 from models.institutional_attributes import Institutional_Attributes
 from models.completitions import Completitions
 import folium  # Add this to your imports at the top
+from math import radians, sin, cos, sqrt, atan2  # Add these imports at the top
 
 @app.route('/', methods=['GET'])
 def index():
@@ -740,15 +741,82 @@ def import_ic2023_data(df):
             'error': f'Error importing data: {str(e)}'
         }
 
+def calculate_distance(lat1, lon1, lat2, lon2):
+    # Convert coordinates to radians
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    r = 3959  # Radius of Earth in miles
+    
+    return round(r * c, 1)
+
 @app.route('/institutions/view/<int:id>')
 def view_institution(id):
-    institution = Institution.query.get_or_404(id)
-    enrollments = Enrollment.query.filter_by(institution_id=institution.institution_id).all()
+    # Get institution with enrollments loaded
+    institution = Institution.query.options(
+        db.joinedload(Institution.enrollments)
+    ).get_or_404(id)
+    
+    # Get enrollments for the most recent year
+    enrollments = Enrollment.query.filter_by(
+        institution_id=institution.institution_id
+    ).all()
+    
+    # KC coordinates
+    kc_lat = 39.0997
+    kc_lng = -94.5786
+    
+    # Calculate distance
+    distance = calculate_distance(
+        kc_lat, kc_lng,
+        institution.latitude, institution.longitude
+    )
+    
+    # Create map centered between institution and KC
+    m = folium.Map()
+    
+    # Add KC marker
+    folium.Marker(
+        location=[kc_lat, kc_lng],
+        popup='Kansas City',
+        tooltip='Kansas City'
+    ).add_to(m)
+    
+    # Add institution marker
+    folium.Marker(
+        location=[institution.latitude, institution.longitude],
+        popup=institution.name,
+        tooltip=institution.name
+    ).add_to(m)
+    
+    # Draw line between points
+    line = folium.PolyLine(
+        locations=[[kc_lat, kc_lng], [institution.latitude, institution.longitude]],
+        color='blue',
+        weight=2,
+        opacity=0.8,
+        dash_array='5, 10'
+    ).add_to(m)
+    
+    # Fit bounds to show both markers
+    bounds = [[kc_lat, kc_lng], [institution.latitude, institution.longitude]]
+    m.fit_bounds(bounds, padding=(30, 30))
+    
+    # Get the HTML representation of the map
+    map_html = m._repr_html_()
     
     return render_template('institutions/view_institution.html',
                          institution=institution,
                          enrollments=enrollments,
-                         EnrollmentType=EnrollmentType)  # Pass the enum to the template
+                         distance=distance,
+                         map_html=map_html,
+                         EnrollmentType=EnrollmentType,
+                         StudyLevel=StudyLevel,
+                         SurveyStudyLevel=SurveyStudyLevel)
 
 @app.route('/institutions/<int:id>/attributes')
 def view_institution_attributes(id):

@@ -97,13 +97,28 @@
             </div>
         </div>
         <div class="detail-group">
-            <h3>Location</h3>
-            <p><strong>Address:</strong> {{ institution.address or 'N/A' }}</p>
-            <p><strong>City:</strong> {{ institution.city }}</p>
-            <p><strong>State:</strong> {{ institution.state }}</p>
-            <p><strong>ZIP:</strong> {{ institution.zip or 'N/A' }}</p>
-            <p><strong>County:</strong> {{ institution.county }}</p>
-            <p><strong>Coordinates:</strong> {{ institution.latitude }}, {{ institution.longitude }}</p>
+            <h3><i class="fas fa-map-marker-alt"></i> Location</h3>
+            <div class="location-container">
+                <div class="address-details">
+                    <p class="full-address">
+                        {{ institution.address or 'N/A' }}<br>
+                        {{ institution.city }}, {{ institution.state }} {{ institution.zip or 'N/A' }}<br>
+                        {{ institution.county }} County
+                    </p>
+                    <p class="coordinates">
+                        <small><i class="fas fa-crosshairs"></i> {{ institution.latitude }}, {{ institution.longitude }}</small>
+                    </p>
+                    <div class="distance-indicator">
+                        <i class="fas fa-route"></i>
+                        <span class="distance-value">{{ distance }}</span>
+                        <span class="distance-unit">miles</span>
+                        <span class="distance-context">from Kansas City</span>
+                    </div>
+                </div>
+                <div id="institution-map" style="height: 300px; width: 100%; margin-top: 10px;">
+                    {{ map_html | safe }}
+                </div>
+            </div>
         </div>
 
         <div class="detail-group">
@@ -305,4 +320,9 @@
             </p>
         </div>
     </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
 {% endblock %}

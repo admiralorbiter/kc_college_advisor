@@ -1069,7 +1069,7 @@ footer {
 }
 
 /* Basic Information section styles */
-.institution-badges {
+.institution-badges { 
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -1084,4 +1084,54 @@ footer {
 .badge-title-iv {
     background-color: #28a745;
     color: white;
+}
+
+.location-container {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Split into 1/3 and 2/3 */
+    gap: 20px;
+    align-items: start;
+}
+
+.address-details {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.full-address {
+    margin-bottom: 15px;
+    line-height: 1.4;
+    font-size: 0.95em;
+}
+
+.coordinates {
+    color: #666;
+    font-size: 0.85em;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+/* Distance indicator styles */
+.distance-indicator {
+    background-color: white;
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Add responsive breakpoint */
+@media (max-width: 768px) {
+    .location-container {
+        grid-template-columns: 1fr;
+    }
+    
+    #institution-map {
+        order: -1; /* Makes map appear first on mobile */
+    }
 }
